@@ -88,17 +88,17 @@ namespace net.vieapps.Components.Security
 	public enum Role
 	{
 		/// <summary>
-		/// All users (mean anonymous users)
+		/// All users (mean all kinds of users, include anonymous/visitor)
 		/// </summary>
 		All,
 
 		/// <summary>
-		/// Authorized users (means signed-in accounts)
+		/// Authenticated users (means all users that are signed-in with an account)
 		/// </summary>
-		Authorized,
+		Authenticated,
 
 		/// <summary>
-		/// Authorized user of a specified site (means signed-in accounts that marked as member of a site)
+		/// Authenticated users of a specified site (means signed-in accounts that marked as member of a site)
 		/// </summary>
 		SiteMember,
 
