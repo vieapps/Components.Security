@@ -1,16 +1,55 @@
-﻿using System;
+﻿#region Related components
+using System;
 using System.Collections.Generic;
+#endregion
 
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Access permissions of a resource (means working permissions of a run-time entity)
+	/// Presents a permission to perform an action on a specified object of a specified service
 	/// </summary>
 	[Serializable]
-	public class AccessPermissions
+	public class Privilege
+	{
+		public Privilege()
+		{
+			this.Actions = new List<string>();
+		}
+
+		#region Properties
+		/// <summary>
+		/// Gets or sets the name of service
+		/// </summary>
+		public string ServiceName { get; set; }
+
+		/// <summary>
+		/// Gets or sets the name of service's object
+		/// </summary>
+		public string ObjectName { get; set; }
+
+		/// <summary>
+		/// Gets or sets the working role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see>, if no role was provided then the actions are use to considering the privilege)
+		/// </summary>
+		public string Role { get; set; }
+
+		/// <summary>
+		/// Gets or sets the working actions can perform
+		/// </summary>
+		public List<string> Actions { get; set; }
+		#endregion
+
+	}
+
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// Presents the working permissions of a specified service or service's object (means working permissions of a run-time entity)
+	/// </summary>
+	[Serializable]
+	public class Privileges
 	{
 
-		public AccessPermissions()
+		public Privileges()
 		{
 			this.DownloadableRoles = new HashSet<string>();
 			this.DownloadableUsers = new HashSet<string>();
@@ -88,17 +127,6 @@ namespace net.vieapps.Components.Security
 		public HashSet<string> AdministrativeUsers { get; set; }
 		#endregion
 
-		#region Helper methods
-		internal static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
-		{
-			return (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
-		}
-
-		internal static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users)
-		{
-			return (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
-		}
-		#endregion
-
 	}
+
 }

@@ -119,7 +119,7 @@ namespace net.vieapps.Components.Security
 			if (useSmallImage)
 				backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.White };
 
-			Bitmap securityBitmap = CreateBackroundImage(width, height, new Color[] { backgroundColors[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length)] });
+			Bitmap securityBitmap = CreateBackroundImage(width, height, new Color[] { backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)] });
 			Graphics securityGraph = Graphics.FromImage(securityBitmap);
 			securityGraph.SmoothingMode = SmoothingMode.AntiAlias;
 
@@ -135,13 +135,13 @@ namespace net.vieapps.Components.Security
 				List<string> noiseTexts = new List<string>() { "Winners never quit", "Quitters never win", "Vietnam - The hidden charm", "Don't be evil", "Keep moving", "Connecting People", "Information at your fingertips", "No sacrifice no victory", "No paint no gain", "Enterprise Web Services", "On-Demand Services for Enterprise", "Cloud Computing Enterprise Services", "Where do you want to go today?", "Make business easier", "Simplify business process", "VIEApps", "vieapps.net" };
 				noiseTexts.Append(texts);
 
-				string noiseText = noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)];
+				string noiseText = noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)];
 				noiseText += " " + noiseText + " " + noiseText + " " + noiseText;
 
 				// write noise texts
-				securityGraph.DrawString(noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)], new Font("Verdana", 10, FontStyle.Underline), new SolidBrush(Color.White), new PointF(0, 3));
-				securityGraph.DrawString(noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)], new Font("Verdana", 12, FontStyle.Bold), new SolidBrush(Color.White), new PointF(5, 7));
-				securityGraph.DrawString(noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, noiseTexts.Count)], new Font("Arial", 11, FontStyle.Italic), new SolidBrush(Color.White), new PointF(-5, 20));
+				securityGraph.DrawString(noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)], new Font("Verdana", 10, FontStyle.Underline), new SolidBrush(Color.White), new PointF(0, 3));
+				securityGraph.DrawString(noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)], new Font("Verdana", 12, FontStyle.Bold), new SolidBrush(Color.White), new PointF(5, 7));
+				securityGraph.DrawString(noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)] + " - " + noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)], new Font("Arial", 11, FontStyle.Italic), new SolidBrush(Color.White), new PointF(-5, 20));
 				securityGraph.DrawString(noiseText, new Font("Arial", 12, FontStyle.Bold), new SolidBrush(Color.White), new PointF(20, 28));
 			}
 
@@ -149,7 +149,7 @@ namespace net.vieapps.Components.Security
 			else
 			{
 				// randrom index to make noise lines
-				int randomIndex = net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length);
+				int randomIndex = UtilityService.GetRandomNumber(0, backgroundColors.Length);
 
 				// first two lines
 				Pen noisePen = new Pen(new SolidBrush(Color.Gray), 2);
@@ -165,7 +165,7 @@ namespace net.vieapps.Components.Security
 					securityGraph.DrawLine(noisePen, new Point(randomIndex, randomIndex), new Point(width - randomIndex * 2, height - randomIndex));
 
 				// third two lines
-				randomIndex = net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length);
+				randomIndex = UtilityService.GetRandomNumber(0, backgroundColors.Length);
 				noisePen = new Pen(new SolidBrush(Color.Magenta), 1);
 				securityGraph.DrawLine(noisePen, new Point(((width / 6) * 3) - randomIndex, randomIndex), new Point(width / 5 + randomIndex, height - randomIndex + 3));
 				if (randomIndex % 2 == 1)
@@ -174,8 +174,8 @@ namespace net.vieapps.Components.Security
 					securityGraph.DrawLine(noisePen, new Point(randomIndex, randomIndex + 1), new Point(width - randomIndex * 2, height - randomIndex + 4));
 
 				// fourth two lines
-				randomIndex = net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length);
-				noisePen = new Pen(new SolidBrush(backgroundColors[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, backgroundColors.Length)]), 1);
+				randomIndex = UtilityService.GetRandomNumber(0, backgroundColors.Length);
+				noisePen = new Pen(new SolidBrush(backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)]), 1);
 				securityGraph.DrawLine(noisePen, new Point(((width / 10) * 3) - randomIndex, randomIndex), new Point(width / 6 + randomIndex, height - randomIndex + 3));
 				if (randomIndex % 2 == 1)
 					securityGraph.DrawLine(noisePen, new Point(width - randomIndex * 3, randomIndex - 2), new Point(randomIndex, height - randomIndex - 2));
@@ -199,16 +199,16 @@ namespace net.vieapps.Components.Security
 				int step = 0;
 				for (int index = 0; index < code.Length; index++)
 				{
-					float x = (index * 7) + step + net.vieapps.Components.Utility.Utility.GetRandomNumber(-1, 9);
-					float y = net.vieapps.Components.Utility.Utility.GetRandomNumber(-2, 0);
+					float x = (index * 7) + step + UtilityService.GetRandomNumber(-1, 9);
+					float y = UtilityService.GetRandomNumber(-2, 0);
 
 					string writtenCode = code.Substring(index, 1);
-					if (writtenCode.Equals("I") || (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
+					if (writtenCode.Equals("I") || (UtilityService.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
 						writtenCode = writtenCode.ToLower();
 
-					int addedX = net.vieapps.Components.Utility.Utility.GetRandomNumber(-3, 5);
-					securityGraph.DrawString(writtenCode, new Font(fonts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, fonts.Length)], net.vieapps.Components.Utility.Utility.GetRandomNumber(13, 19), FontStyle.Bold), brushs[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, brushs.Length)], new PointF(x + addedX, y));
-					step += net.vieapps.Components.Utility.Utility.GetRandomNumber(13, 23);
+					int addedX = UtilityService.GetRandomNumber(-3, 5);
+					securityGraph.DrawString(writtenCode, new Font(fonts[UtilityService.GetRandomNumber(0, fonts.Length)], UtilityService.GetRandomNumber(13, 19), FontStyle.Bold), brushs[UtilityService.GetRandomNumber(0, brushs.Length)], new PointF(x + addedX, y));
+					step += UtilityService.GetRandomNumber(13, 23);
 				}
 			}
 			else
@@ -217,7 +217,7 @@ namespace net.vieapps.Components.Security
 				int step = 0;
 				for (int index = 0; index < code.Length; index++)
 				{
-					string font = fonts[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, fonts.Length)];
+					string font = fonts[UtilityService.GetRandomNumber(0, fonts.Length)];
 					float x = 2 + step, y = 10;
 					step += 9;
 					float fontSize = 15;
@@ -229,47 +229,47 @@ namespace net.vieapps.Components.Security
 					}
 					else if (index > 3 && index < 6)
 					{
-						y -= net.vieapps.Components.Utility.Utility.GetRandomNumber(3, 5);
+						y -= UtilityService.GetRandomNumber(3, 5);
 						fontSize += index;
 						step += index / 5;
 						if (index == 4)
 						{
-							if (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 1)
-								y += net.vieapps.Components.Utility.Utility.GetRandomNumber(8, 12);
-							else if (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 2)
+							if (UtilityService.GetRandomNumber() % 2 == 1)
+								y += UtilityService.GetRandomNumber(8, 12);
+							else if (UtilityService.GetRandomNumber() % 2 == 2)
 							{
-								y -= net.vieapps.Components.Utility.Utility.GetRandomNumber(2, 6);
-								fontSize += net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 4);
+								y -= UtilityService.GetRandomNumber(2, 6);
+								fontSize += UtilityService.GetRandomNumber(1, 4);
 							}
 						}
 					}
 					else if (index > 5)
 					{
-						x += net.vieapps.Components.Utility.Utility.GetRandomNumber(0, 4);
-						y -= net.vieapps.Components.Utility.Utility.GetRandomNumber(0, 4);
+						x += UtilityService.GetRandomNumber(0, 4);
+						y -= UtilityService.GetRandomNumber(0, 4);
 						fontSize += index - 7;
 						step += index / 3 + 1;
 						if (index == 10)
 						{
-							if (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 1)
-								y += net.vieapps.Components.Utility.Utility.GetRandomNumber(7, 14);
-							else if (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 2)
+							if (UtilityService.GetRandomNumber() % 2 == 1)
+								y += UtilityService.GetRandomNumber(7, 14);
+							else if (UtilityService.GetRandomNumber() % 2 == 2)
 							{
-								y -= net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 3);
-								fontSize += net.vieapps.Components.Utility.Utility.GetRandomNumber(2, 5);
+								y -= UtilityService.GetRandomNumber(1, 3);
+								fontSize += UtilityService.GetRandomNumber(2, 5);
 							}
 						}
 					}
 					string writtenCode = code.Substring(index, 1);
-					if (writtenCode.Equals("I") || (net.vieapps.Components.Utility.Utility.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
+					if (writtenCode.Equals("I") || (UtilityService.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
 						writtenCode = writtenCode.ToLower();
-					securityGraph.DrawString(writtenCode, new Font(font, fontSize, FontStyle.Bold), brushs[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, brushs.Length)], new PointF(x + 2, y + 2));
-					securityGraph.DrawString(writtenCode, new Font(font, fontSize, FontStyle.Bold), brushs[net.vieapps.Components.Utility.Utility.GetRandomNumber(0, brushs.Length)], new PointF(x, y));
+					securityGraph.DrawString(writtenCode, new Font(font, fontSize, FontStyle.Bold), brushs[UtilityService.GetRandomNumber(0, brushs.Length)], new PointF(x + 2, y + 2));
+					securityGraph.DrawString(writtenCode, new Font(font, fontSize, FontStyle.Bold), brushs[UtilityService.GetRandomNumber(0, brushs.Length)], new PointF(x, y));
 				}
 
 				// fill it randomly with pixels
 				int maxX = width, maxY = height, startX = 0, startY = 0;
-				int random = net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 100);
+				int random = UtilityService.GetRandomNumber(1, 100);
 				if (random > 80)
 				{
 					maxX -= maxX / 3;
@@ -295,10 +295,10 @@ namespace net.vieapps.Components.Security
 			}
 
 			// add random noise into image (use SIN)
-			double divideTo = 64.0d + net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 10);
-			int distortion = net.vieapps.Components.Utility.Utility.GetRandomNumber(5, 11);
+			double divideTo = 64.0d + UtilityService.GetRandomNumber(1, 10);
+			int distortion = UtilityService.GetRandomNumber(5, 11);
 			if (useSmallImage)
-				distortion = net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 5);
+				distortion = UtilityService.GetRandomNumber(1, 5);
 
 			Bitmap noisedBitmap = new Bitmap(width, height, PixelFormat.Format16bppRgb555);
 			for (int y = 0; y < height; y++)
@@ -330,28 +330,28 @@ namespace net.vieapps.Components.Security
 		static Bitmap CreateBackroundImage(int width, int height, Color[] backgroundColors)
 		{
 			// create element bitmaps
-			int bmpWidth = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(5, 10), net.vieapps.Components.Utility.Utility.GetRandomNumber(20, width / 2));
-			int bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 4, height / 2);
+			int bmpWidth = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(5, 10), UtilityService.GetRandomNumber(20, width / 2));
+			int bmpHeight = UtilityService.GetRandomNumber(height / 4, height / 2);
 			if (height > 20)
-				bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(1, 10), net.vieapps.Components.Utility.Utility.GetRandomNumber(12, height));
+				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(1, 10), UtilityService.GetRandomNumber(12, height));
 			Bitmap bitmap1 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
 			Graphics graph = Graphics.FromImage(bitmap1);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[0]);
 
-			bmpWidth = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(15, width / 3), net.vieapps.Components.Utility.Utility.GetRandomNumber(width / 3, width / 2));
-			bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(5, height / 3);
+			bmpWidth = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(15, width / 3), UtilityService.GetRandomNumber(width / 3, width / 2));
+			bmpHeight = UtilityService.GetRandomNumber(5, height / 3);
 			if (height > 20)
-				bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(5, height / 4), net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 4, height / 2));
+				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(5, height / 4), UtilityService.GetRandomNumber(height / 4, height / 2));
 			Bitmap bitmap2 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
 			graph = Graphics.FromImage(bitmap2);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[1]);
 
-			bmpWidth = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(width / 4, width / 2), net.vieapps.Components.Utility.Utility.GetRandomNumber(width / 2, width));
-			bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 2, height);
+			bmpWidth = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(width / 4, width / 2), UtilityService.GetRandomNumber(width / 2, width));
+			bmpHeight = UtilityService.GetRandomNumber(height / 2, height);
 			if (height > 20)
-				bmpHeight = net.vieapps.Components.Utility.Utility.GetRandomNumber(net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 5, height / 2), net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 2, height));
+				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(height / 5, height / 2), UtilityService.GetRandomNumber(height / 2, height));
 			Bitmap bitmap3 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
 			graph = Graphics.FromImage(bitmap3);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
@@ -361,9 +361,9 @@ namespace net.vieapps.Components.Security
 			graph = Graphics.FromImage(backroundBitmap);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[3]);
-			graph.DrawImage(bitmap1, net.vieapps.Components.Utility.Utility.GetRandomNumber(0, width / 2), net.vieapps.Components.Utility.Utility.GetRandomNumber(0, height / 2));
-			graph.DrawImage(bitmap2, net.vieapps.Components.Utility.Utility.GetRandomNumber(width / 5, width / 2), net.vieapps.Components.Utility.Utility.GetRandomNumber(height / 5, height / 2));
-			graph.DrawImage(bitmap3, net.vieapps.Components.Utility.Utility.GetRandomNumber(width / 4, width / 3), net.vieapps.Components.Utility.Utility.GetRandomNumber(0, height / 3));
+			graph.DrawImage(bitmap1, UtilityService.GetRandomNumber(0, width / 2), UtilityService.GetRandomNumber(0, height / 2));
+			graph.DrawImage(bitmap2, UtilityService.GetRandomNumber(width / 5, width / 2), UtilityService.GetRandomNumber(height / 5, height / 2));
+			graph.DrawImage(bitmap3, UtilityService.GetRandomNumber(width / 4, width / 3), UtilityService.GetRandomNumber(0, height / 3));
 			
 			return backroundBitmap;
 		}
@@ -378,49 +378,49 @@ namespace net.vieapps.Components.Security
 		/// <returns>The string that presents random code</returns>
 		public static string GenerateRandomCode(bool useShortCode = true, bool useHex = false)
 		{
-			string code = net.vieapps.Components.Utility.Utility.GetUUID();
+			string code = UtilityService.GetUUID();
 			int length = 9;
 			if (useShortCode)
 				length = 4;
 
 			if (!useHex)
 			{
-				code = net.vieapps.Components.Utility.Utility.GetRandomNumber(1000).ToString() + net.vieapps.Components.Utility.Utility.GetRandomNumber(1000).ToString();
+				code = UtilityService.GetRandomNumber(1000).ToString() + UtilityService.GetRandomNumber(1000).ToString();
 				while (code.Length < length + 5)
-					code += net.vieapps.Components.Utility.Utility.GetRandomNumber(1000).ToString();
+					code += UtilityService.GetRandomNumber(1000).ToString();
 			}
 
-			int index = net.vieapps.Components.Utility.Utility.GetRandomNumber(0, code.Length);
+			int index = UtilityService.GetRandomNumber(0, code.Length);
 			if (index > code.Length - length)
 				index = code.Length - length;
 			code = code.Substring(index, length);
 
-			string random1 = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(48, 57)).ToString();
+			string random1 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
 			string replacement = "O";
 			while (replacement.Equals("O"))
-				replacement = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(71, 90)).ToString();
+				replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
 			code = code.Replace(random1, replacement);
 
 			if (length > 4)
 			{
 				string random2 = random1;
 				while (random2.Equals(random1))
-					random2 = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(48, 57)).ToString();
+					random2 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
 				replacement = "O";
 				while (replacement.Equals("O"))
-					replacement = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(71, 90)).ToString();
+					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
 				code = code.Replace(random2, replacement);
 
 				string random3 = random1;
 				while (random3.Equals(random1))
 				{
-					random3 = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(48, 57)).ToString();
+					random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
 					if (random3.Equals(random2))
-						random3 = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(48, 57)).ToString();
+						random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
 				}
 				replacement = "O";
 				while (replacement.Equals("O"))
-					replacement = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(71, 90)).ToString();
+					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
 				code = code.Replace(random3, replacement);
 			}
 
@@ -436,13 +436,13 @@ namespace net.vieapps.Components.Security
 			}
 
 			if (!hasNumber)
-				code += ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(48, 57)).ToString();
+				code += ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
 
 			if (!hasChar)
 			{
 				replacement = "O";
 				while (replacement.Equals("O"))
-					replacement = ((char)net.vieapps.Components.Utility.Utility.GetRandomNumber(65, 90)).ToString();
+					replacement = ((char)UtilityService.GetRandomNumber(65, 90)).ToString();
 				code += replacement;
 			}
 

@@ -2,6 +2,9 @@
 
 namespace net.vieapps.Components.Security
 {
+	/// <summary>
+	/// Available actions
+	/// </summary>
 	[Serializable]
 	public enum Action
 	{
@@ -80,12 +83,39 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		CheckIn,
 
+		/// <summary>
+		/// Registers an object
+		/// </summary>
+		Register,
+
+		/// <summary>
+		/// Activates an object
+		/// </summary>
+		Activate,
+
+		/// <summary>
+		/// Locks an object
+		/// </summary>
+		Lock,
+
+		/// <summary>
+		/// Unlocks an object
+		/// </summary>
+		Unlock,
+
+		/// <summary>
+		/// Fulls means all actions
+		/// </summary>
+		Full
 	}
 
 	//  --------------------------------------------------------------------------------------------
 
+	/// <summary>
+	/// Available system roles
+	/// </summary>
 	[Serializable]
-	public enum Role
+	public enum SystemRole
 	{
 		/// <summary>
 		/// All users (mean all kinds of users, include anonymous/visitor)
@@ -98,14 +128,123 @@ namespace net.vieapps.Components.Security
 		Authenticated,
 
 		/// <summary>
-		/// Authenticated users of a specified site (means signed-in accounts that marked as member of a site)
+		/// Authenticated users of a specified serivce/site (means signed-in accounts that marked as member of a service/site)
 		/// </summary>
-		SiteMember,
+		Authorized,
 
 		/// <summary>
-		/// System Administrator
+		/// Moderator of a specified serivce/site (means signed-in accounts that marked as moderator of a service/site)
+		/// </summary>
+		Moderator,
+
+		/// <summary>
+		/// Administrator of a specified serivce/site (means signed-in accounts that marked as moderator of a service/site)
 		/// </summary>
 		Administrator,
+
+		/// <summary>
+		/// Administrator of the whole system/services
+		/// </summary>
+		SystemAdministrator
 	}
+
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// Available privilege roles
+	/// </summary>
+	[Serializable]
+	public enum PrivilegeRole
+	{
+		/// <summary>
+		/// Presents the working role that able to download files/attachments of the published resources
+		/// </summary>
+		Downloader,
+
+		/// <summary>
+		/// Presents the working role that able to view the details (means read-only on published resources)
+		/// </summary>
+		Viewer,
+
+		/// <summary>
+		/// Presents the working role that able to contribute (means create new and view the published/their own resources)
+		/// </summary>
+		Contributor,
+
+		/// <summary>
+		/// Presents the working role that able to edit (means create new and re-update the published resources)
+		/// </summary>
+		Editor,
+
+		/// <summary>
+		/// Presents the working role that able to moderate (means moderate all kinds of resources)
+		/// </summary>
+		Moderator,
+
+		/// <summary>
+		/// Presents the working role that able to do anything (means full access)
+		/// </summary>
+		Administrator
+	}
+
+	/*
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// Available type of an account
+	/// </summary>
+	[Serializable]
+	public enum AccountType
+	{
+		/// <summary>
+		/// Presents the built-in account (default)
+		/// </summary>
+		BuiltIn,
+
+		/// <summary>
+		/// Presents the OAth account
+		/// </summary>
+		OAuth,
+
+		/// <summary>
+		/// Presents the Windows LDAP account
+		/// </summary>
+		Windows
+	}
+
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// Available type of OAuth
+	/// </summary>
+	[Serializable]
+	public enum OAuthType
+	{
+		/// <summary>
+		/// Presents the account that are authenticated by Facebook OAuth
+		/// </summary>
+		Facebook,
+
+		/// <summary>
+		/// Presents the account that are authenticated by Goole OAuth
+		/// </summary>
+		Google,
+
+		/// <summary>
+		/// Presents the account that are authenticated by Microsoft OAuth
+		/// </summary>
+		Microsoft,
+
+		/// <summary>
+		/// Presents the account that are authenticated by Twitter OAuth
+		/// </summary>
+		Twitter,
+
+		/// <summary>
+		/// Presents the account that are authenticated by LinkedIn OAuth
+		/// </summary>
+		LinkedIn
+	}
+	*/
 
 }

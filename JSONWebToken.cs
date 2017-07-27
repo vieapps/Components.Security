@@ -37,6 +37,7 @@ namespace net.vieapps.Components.Security
 	/// </summary>
 	public static class JSONWebToken
 	{
+
 		static Dictionary<JSONWebTokenHashAlgorithm, Func<string, string, string>> HashAlgorithms
 			= new Dictionary<JSONWebTokenHashAlgorithm, Func<string, string, string>>
 			{
