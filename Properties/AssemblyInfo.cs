@@ -28,4 +28,4 @@ using System.Runtime.CompilerServices;
 //
 [assembly: AssemblyVersion("10.1")]
 [assembly: AssemblyFileVersion("10.1")]
-[assembly: AssemblyInformationalVersion("10.1.crfr-2017.07.22")]
+[assembly: AssemblyInformationalVersion("10.1.uacc-2017.08.05")]

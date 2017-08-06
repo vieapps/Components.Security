@@ -187,11 +187,10 @@ namespace net.vieapps.Components.Security
 		Administrator
 	}
 
-	/*
 	//  --------------------------------------------------------------------------------------------
 
 	/// <summary>
-	/// Available type of an account
+	/// Available type of an user's account
 	/// </summary>
 	[Serializable]
 	public enum AccountType
@@ -215,7 +214,7 @@ namespace net.vieapps.Components.Security
 	//  --------------------------------------------------------------------------------------------
 
 	/// <summary>
-	/// Available type of OAuth
+	/// Available type of an OAuth's account
 	/// </summary>
 	[Serializable]
 	public enum OAuthType
@@ -245,6 +244,5 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		LinkedIn
 	}
-	*/
 
 }
