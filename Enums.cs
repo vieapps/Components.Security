@@ -104,7 +104,7 @@ namespace net.vieapps.Components.Security
 		Unlock,
 
 		/// <summary>
-		/// Fulls means all actions
+		/// All actions
 		/// </summary>
 		Full
 	}

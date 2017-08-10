@@ -11,8 +11,11 @@ namespace net.vieapps.Components.Security
 	[Serializable]
 	public class Privilege
 	{
-		public Privilege()
+		public Privilege(string serviceName = null, string objectName = null, string role = null)
 		{
+			this.ServiceName = serviceName;
+			this.ObjectName = objectName;
+			this.Role = role;
 			this.Actions = new List<string>();
 		}
 
