@@ -14,6 +14,7 @@ namespace net.vieapps.Components.Security
 	/// <summary>
 	/// All available hash algorithms for working with JSON Web Token
 	/// </summary>
+	[Serializable]
 	public enum JSONWebTokenHashAlgorithm
 	{
 		/// <summary>
