@@ -25,6 +25,7 @@ namespace net.vieapps.Components.Security
 		public User()
 		{
 			this.ID = "";
+			this.Name = "";
 			this.Role = SystemRole.All;
 			this.Roles = new List<string>();
 			this.Privileges = new List<Privilege>();
@@ -35,6 +36,11 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the identity
 		/// </summary>
 		public string ID { get; set; }
+
+		/// <summary>
+		/// Gets or sets the name
+		/// </summary>
+		public string Name { get; set; }
 
 		/// <summary>
 		/// Gets or sets the system role
@@ -554,10 +560,10 @@ namespace net.vieapps.Components.Security
 			token = new JObject()
 			{
 				{ "Key", CryptoService.RSAEncrypt(rsaCrypto, key) },
-				{ "Data", token.ToString(Newtonsoft.Json.Formatting.None).Encrypt(key) }
+				{ "Data", token.ToString(Formatting.None).Encrypt(key) }
 			};
 
-			return token.ToString(Newtonsoft.Json.Formatting.None).Encrypt(aesKey);
+			return token.ToString(Formatting.None).Encrypt(aesKey);
 		}
 
 		/// <summary>
@@ -708,8 +714,8 @@ namespace net.vieapps.Components.Security
 
 			// check issued time
 			var issuedAt = payload["iat"] != null
-				? (long)(payload["iat"] as JValue).Value
-				: DateTime.Now.AddDays(-30).ToUnixTimestamp();
+				? (payload["iat"] as JValue).Value.CastAs<long>()
+				: DateTime.Now.AddMinutes(-30).ToUnixTimestamp();
 			if (DateTime.Now.ToUnixTimestamp() - issuedAt > 30)
 				throw new TokenExpiredException();
 
@@ -775,18 +781,16 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static User ParseAuthenticateTicket(string ticket, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
+			var user = new User();
 			try
 			{
 				var authTicket = FormsAuthentication.Decrypt(ticket);
-				var user = User.ParseAccessToken(authTicket.UserData, rsaCrypto, aesKey);
+				user = User.ParseAccessToken(authTicket.UserData, rsaCrypto, aesKey);
 				if (!user.ID.Equals(authTicket.Name))
-					throw new InvalidTokenException();
-				return user;
+					user = new User();
 			}
-			catch
-			{
-				return new User();
-			}
+			catch { }
+			return user;
 		}
 		#endregion
 
@@ -813,11 +817,6 @@ namespace net.vieapps.Components.Security
 				this.Privileges = user.Privileges;
 			}
 		}
-
-		/// <summary>
-		/// Gets the name (means the identity) of the current user
-		/// </summary>
-		public string Name { get { return this.ID; } }
 	}
 
 	// -----------------------------------------------------
@@ -862,7 +861,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsInRole(string role)
 		{
-			return this.Identity != null && (this.Identity as UserIdentity).Roles.FirstOrDefault(r => role.IsEquals(role)) != null;
+			return !string.IsNullOrWhiteSpace(role) && this.Identity != null && (this.Identity as UserIdentity).Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
 		}
 
 		/// <summary>
