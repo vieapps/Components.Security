@@ -14,20 +14,102 @@ namespace net.vieapps.Components.Security
 	/// <summary>
 	/// Helper for working with captcha images
 	/// </summary>
-	public static class CaptchaHelper
+	public static class Captcha
 	{
 
-		#region Generate new code & validate
+		#region Generate code
 		/// <summary>
 		/// Generates new code of the captcha
 		/// </summary>
 		/// <param name="salt">The string to use as salt</param>
 		/// <returns>The encrypted string that contains code of captcha</returns>
-		public static string GenerateCode(string salt)
+		public static string GenerateCode(string salt = null)
 		{
-			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaHelper.GenerateRandomCode()).Encrypt(CryptoService.DefaultEncryptionKey, true);
+			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + Captcha.GenerateRandomCode()).Encrypt(CryptoService.DefaultEncryptionKey, true);
 		}
 
+		/// <summary>
+		/// Generates random code for using with captcha or other purpose
+		/// </summary>
+		/// <param name="useShortCode">true to use short-code</param>
+		/// <param name="useHex">true to use hexa in code</param>
+		/// <returns>The string that presents random code</returns>
+		public static string GenerateRandomCode(bool useShortCode = true, bool useHex = false)
+		{
+			var code = UtilityService.GetUUID();
+			var length = 9;
+			if (useShortCode)
+				length = 4;
+
+			if (!useHex)
+			{
+				code = UtilityService.GetRandomNumber(1000).ToString() + UtilityService.GetRandomNumber(1000).ToString();
+				while (code.Length < length + 5)
+					code += UtilityService.GetRandomNumber(1000).ToString();
+			}
+
+			var index = UtilityService.GetRandomNumber(0, code.Length);
+			if (index > code.Length - length)
+				index = code.Length - length;
+			code = code.Substring(index, length);
+
+			var random1 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
+			var replacement = "O";
+			while (replacement.Equals("O"))
+				replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
+			code = code.Replace(random1, replacement);
+
+			if (length > 4)
+			{
+				var random2 = random1;
+				while (random2.Equals(random1))
+					random2 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
+				replacement = "O";
+				while (replacement.Equals("O"))
+					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
+				code = code.Replace(random2, replacement);
+
+				var random3 = random1;
+				while (random3.Equals(random1))
+				{
+					random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
+					if (random3.Equals(random2))
+						random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
+				}
+				replacement = "O";
+				while (replacement.Equals("O"))
+					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
+				code = code.Replace(random3, replacement);
+			}
+
+			var hasNumber = false;
+			var hasChar = false;
+			for (int charIndex = 0; charIndex < code.Length; charIndex++)
+			{
+				if (code[charIndex] >= '0' && code[charIndex] <= '9')
+					hasNumber = true;
+				if (code[charIndex] >= 'A' && code[charIndex] <= 'Z')
+					hasChar = true;
+				if (hasNumber && hasChar)
+					break;
+			}
+
+			if (!hasNumber)
+				code += ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
+
+			if (!hasChar)
+			{
+				replacement = "O";
+				while (replacement.Equals("O"))
+					replacement = ((char)UtilityService.GetRandomNumber(65, 90)).ToString();
+				code += replacement;
+			}
+
+			return code.Right(length);
+		}
+		#endregion
+
+		#region Validate code
 		/// <summary>
 		/// Validates captcha code
 		/// </summary>
@@ -39,23 +121,20 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(captchaCode) || string.IsNullOrWhiteSpace(inputCode))
 				return false;
 
-			string code = "";
 			try
 			{
-				code = captchaCode.Decrypt(CryptoService.DefaultEncryptionKey, true);
-				string[] codes = code.ToArray('-');
-				code = codes[codes.Length - 1];
+				var codes = captchaCode.Decrypt(CryptoService.DefaultEncryptionKey, true).ToArray('-');
 
-				DateTime datetime = Convert.ToInt64(codes[0]).FromUnixTimestamp(false);
+				var datetime = Convert.ToInt64(codes.First()).FromUnixTimestamp(false);
 				if ((DateTime.Now - datetime).TotalMinutes > 5.0)
 					return false;
+
+				return inputCode.Trim().IsEquals(codes.Last());
 			}
 			catch
 			{
 				return false;
 			}
-
-			return code.IsEquals(inputCode.Trim());
 		}
 		#endregion
 
@@ -65,31 +144,19 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="output">The HttResponse object to export captcha image to</param>
 		/// <param name="code">The string that presents encrypted code for generating</param>
-		public static void GenerateCaptchaImage(HttpResponse output, string code)
-		{
-			CaptchaHelper.GenerateCaptchaImage(output, code, true, null);
-		}
-
-		/// <summary>
-		/// Generates captcha images
-		/// </summary>
-		/// <param name="output">The HttResponse object to export captcha image to</param>
-		/// <param name="code">The string that presents encrypted code for generating</param>
 		/// <param name="useSmallImage">true to use small image</param>
 		/// <param name="noises">The collection of noise texts</param>
-		public static void GenerateCaptchaImage(HttpResponse output, string code, bool useSmallImage, List<string> noises)
+		public static void GenerateImage(this HttpResponse output, string code, bool useSmallImage = true, List<string> noises = null)
 		{
 			// check code
 			if (!code.Equals(""))
 			{
 				try
 				{
-					code = code.Decrypt(CryptoService.DefaultEncryptionKey, true);
-					string[] codes = code.ToArray('-');
-					code = codes[codes.Length - 1];
-					string tempCode = "";
-					string space = " ";
-					string spaceP = "";
+					code = code.Decrypt(CryptoService.DefaultEncryptionKey, true).ToArray('-').Last();
+					var tempCode = "";
+					var space = " ";
+					var spaceP = "";
 					if (code.Length <= 5 && !useSmallImage)
 						spaceP = "  ";
 					else if (useSmallImage)
@@ -107,7 +174,8 @@ namespace net.vieapps.Components.Security
 				code = "Invalid";
 
 			// prepare sizae of security image
-			int width = 220, height = 48;
+			var width = 220;
+			var height = 48;
 			if (useSmallImage)
 			{
 				width = 110;
@@ -115,27 +183,27 @@ namespace net.vieapps.Components.Security
 			}
 
 			// create new graphic from the bitmap with random background color
-			Color[] backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Violet, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.LightGray, Color.Tomato, Color.LightGreen, Color.White };
+			var backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Violet, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.LightGray, Color.Tomato, Color.LightGreen, Color.White };
 			if (useSmallImage)
 				backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.White };
 
-			Bitmap securityBitmap = CreateBackroundImage(width, height, new Color[] { backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)] });
-			Graphics securityGraph = Graphics.FromImage(securityBitmap);
+			var securityBitmap = CreateBackroundImage(width, height, new Color[] { backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)] });
+			var securityGraph = Graphics.FromImage(securityBitmap);
 			securityGraph.SmoothingMode = SmoothingMode.AntiAlias;
 
 			// add noise texts (for big image)
 			if (!useSmallImage)
 			{
 				// comuting noise texts for the image
-				List<string> texts =
+				var texts =
 					noises != null && noises.Count > 0
 					? noises
-					: new List<string>() { "VIEApps", "vieapps.net", "VIEApps REST", "Tyrion Q. Nguyen" };
+					: new List<string>() { "VIEApps", "vieapps.net", "VIEApps API Gateway", "VIEApps REST API" };
 
-				List<string> noiseTexts = new List<string>() { "Winners never quit", "Quitters never win", "Vietnam - The hidden charm", "Don't be evil", "Keep moving", "Connecting People", "Information at your fingertips", "No sacrifice no victory", "No paint no gain", "Enterprise Web Services", "On-Demand Services for Enterprise", "Cloud Computing Enterprise Services", "Where do you want to go today?", "Make business easier", "Simplify business process", "VIEApps", "vieapps.net" };
+				var noiseTexts = new List<string>() { "Winners never quit", "Quitters never win", "Vietnam - The hidden charm", "Don't be evil", "Keep moving", "Connecting People", "Information at your fingertips", "No sacrifice no victory", "No paint no gain", "Enterprise Web Services", "On-Demand Services for Enterprise", "Cloud Computing Enterprise Services", "Where do you want to go today?", "Make business easier", "Simplify business process", "VIEApps", "vieapps.net" };
 				noiseTexts.Append(texts);
 
-				string noiseText = noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)];
+				var noiseText = noiseTexts[UtilityService.GetRandomNumber(0, noiseTexts.Count)];
 				noiseText += " " + noiseText + " " + noiseText + " " + noiseText;
 
 				// write noise texts
@@ -149,10 +217,10 @@ namespace net.vieapps.Components.Security
 			else
 			{
 				// randrom index to make noise lines
-				int randomIndex = UtilityService.GetRandomNumber(0, backgroundColors.Length);
+				var randomIndex = UtilityService.GetRandomNumber(0, backgroundColors.Length);
 
 				// first two lines
-				Pen noisePen = new Pen(new SolidBrush(Color.Gray), 2);
+				var noisePen = new Pen(new SolidBrush(Color.Gray), 2);
 				securityGraph.DrawLine(noisePen, new Point(width, randomIndex), new Point(randomIndex, height / 2 - randomIndex));
 				securityGraph.DrawLine(noisePen, new Point(width / 3 - randomIndex, randomIndex), new Point(width / 2 + randomIndex, height - randomIndex));
 
@@ -184,11 +252,9 @@ namespace net.vieapps.Components.Security
 			}
 
 			// put the security code into the image with random font and brush
-			string[] fonts = new string[] {
-					"Verdana", "Arial", "Times New Roman", "Courier", "Courier New", "Comic Sans MS"
-				};
+			var fonts = new string[] { "Verdana", "Arial", "Times New Roman", "Courier", "Courier New", "Comic Sans MS" };
 
-			Brush[] brushs = new Brush[] {
+			var brushs = new Brush[] {
 				new SolidBrush(Color.Black), new SolidBrush(Color.Blue), new SolidBrush(Color.DarkBlue), new SolidBrush(Color.DarkGreen),
 				new SolidBrush(Color.Magenta), new SolidBrush(Color.Red), new SolidBrush(Color.DarkRed), new SolidBrush(Color.Black),
 				new SolidBrush(Color.Firebrick), new SolidBrush(Color.DarkGreen), new SolidBrush(Color.Green), new SolidBrush(Color.DarkViolet)
@@ -196,17 +262,17 @@ namespace net.vieapps.Components.Security
 
 			if (useSmallImage)
 			{
-				int step = 0;
-				for (int index = 0; index < code.Length; index++)
+				var step = 0;
+				for (var index = 0; index < code.Length; index++)
 				{
 					float x = (index * 7) + step + UtilityService.GetRandomNumber(-1, 9);
 					float y = UtilityService.GetRandomNumber(-2, 0);
 
-					string writtenCode = code.Substring(index, 1);
+					var writtenCode = code.Substring(index, 1);
 					if (writtenCode.Equals("I") || (UtilityService.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
 						writtenCode = writtenCode.ToLower();
 
-					int addedX = UtilityService.GetRandomNumber(-3, 5);
+					var addedX = UtilityService.GetRandomNumber(-3, 5);
 					securityGraph.DrawString(writtenCode, new Font(fonts[UtilityService.GetRandomNumber(0, fonts.Length)], UtilityService.GetRandomNumber(13, 19), FontStyle.Bold), brushs[UtilityService.GetRandomNumber(0, brushs.Length)], new PointF(x + addedX, y));
 					step += UtilityService.GetRandomNumber(13, 23);
 				}
@@ -214,10 +280,10 @@ namespace net.vieapps.Components.Security
 			else
 			{
 				// write code
-				int step = 0;
+				var step = 0;
 				for (int index = 0; index < code.Length; index++)
 				{
-					string font = fonts[UtilityService.GetRandomNumber(0, fonts.Length)];
+					var font = fonts[UtilityService.GetRandomNumber(0, fonts.Length)];
 					float x = 2 + step, y = 10;
 					step += 9;
 					float fontSize = 15;
@@ -260,7 +326,7 @@ namespace net.vieapps.Components.Security
 							}
 						}
 					}
-					string writtenCode = code.Substring(index, 1);
+					var writtenCode = code.Substring(index, 1);
 					if (writtenCode.Equals("I") || (UtilityService.GetRandomNumber() % 2 == 1 && !writtenCode.Equals("L")))
 						writtenCode = writtenCode.ToLower();
 					securityGraph.DrawString(writtenCode, new Font(font, fontSize, FontStyle.Bold), brushs[UtilityService.GetRandomNumber(0, brushs.Length)], new PointF(x + 2, y + 2));
@@ -300,7 +366,7 @@ namespace net.vieapps.Components.Security
 			if (useSmallImage)
 				distortion = UtilityService.GetRandomNumber(1, 5);
 
-			Bitmap noisedBitmap = new Bitmap(width, height, PixelFormat.Format16bppRgb555);
+			var noisedBitmap = new Bitmap(width, height, PixelFormat.Format16bppRgb555);
 			for (int y = 0; y < height; y++)
 				for (int x = 0; x < width; x++)
 				{
@@ -334,8 +400,8 @@ namespace net.vieapps.Components.Security
 			int bmpHeight = UtilityService.GetRandomNumber(height / 4, height / 2);
 			if (height > 20)
 				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(1, 10), UtilityService.GetRandomNumber(12, height));
-			Bitmap bitmap1 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
-			Graphics graph = Graphics.FromImage(bitmap1);
+			var bitmap1 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
+			var graph = Graphics.FromImage(bitmap1);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[0]);
 
@@ -343,7 +409,7 @@ namespace net.vieapps.Components.Security
 			bmpHeight = UtilityService.GetRandomNumber(5, height / 3);
 			if (height > 20)
 				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(5, height / 4), UtilityService.GetRandomNumber(height / 4, height / 2));
-			Bitmap bitmap2 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
+			var bitmap2 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
 			graph = Graphics.FromImage(bitmap2);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[1]);
@@ -352,12 +418,12 @@ namespace net.vieapps.Components.Security
 			bmpHeight = UtilityService.GetRandomNumber(height / 2, height);
 			if (height > 20)
 				bmpHeight = UtilityService.GetRandomNumber(UtilityService.GetRandomNumber(height / 5, height / 2), UtilityService.GetRandomNumber(height / 2, height));
-			Bitmap bitmap3 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
+			var bitmap3 = new Bitmap(bmpWidth, bmpHeight, PixelFormat.Format16bppRgb555);
 			graph = Graphics.FromImage(bitmap3);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[2]);
 
-			Bitmap backroundBitmap = new Bitmap(width, height, PixelFormat.Format16bppRgb555);
+			var backroundBitmap = new Bitmap(width, height, PixelFormat.Format16bppRgb555);
 			graph = Graphics.FromImage(backroundBitmap);
 			graph.SmoothingMode = SmoothingMode.AntiAlias;
 			graph.Clear(backgroundColors[3]);
@@ -366,87 +432,6 @@ namespace net.vieapps.Components.Security
 			graph.DrawImage(bitmap3, UtilityService.GetRandomNumber(width / 4, width / 3), UtilityService.GetRandomNumber(0, height / 3));
 			
 			return backroundBitmap;
-		}
-		#endregion
-
-		#region Generate random code
-		/// <summary>
-		/// Generates random code for using with captcha or other purpose
-		/// </summary>
-		/// <param name="useShortCode">true to use short-code</param>
-		/// <param name="useHex">true to use hexa in code</param>
-		/// <returns>The string that presents random code</returns>
-		public static string GenerateRandomCode(bool useShortCode = true, bool useHex = false)
-		{
-			string code = UtilityService.GetUUID();
-			int length = 9;
-			if (useShortCode)
-				length = 4;
-
-			if (!useHex)
-			{
-				code = UtilityService.GetRandomNumber(1000).ToString() + UtilityService.GetRandomNumber(1000).ToString();
-				while (code.Length < length + 5)
-					code += UtilityService.GetRandomNumber(1000).ToString();
-			}
-
-			int index = UtilityService.GetRandomNumber(0, code.Length);
-			if (index > code.Length - length)
-				index = code.Length - length;
-			code = code.Substring(index, length);
-
-			string random1 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
-			string replacement = "O";
-			while (replacement.Equals("O"))
-				replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
-			code = code.Replace(random1, replacement);
-
-			if (length > 4)
-			{
-				string random2 = random1;
-				while (random2.Equals(random1))
-					random2 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
-				replacement = "O";
-				while (replacement.Equals("O"))
-					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
-				code = code.Replace(random2, replacement);
-
-				string random3 = random1;
-				while (random3.Equals(random1))
-				{
-					random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
-					if (random3.Equals(random2))
-						random3 = ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
-				}
-				replacement = "O";
-				while (replacement.Equals("O"))
-					replacement = ((char)UtilityService.GetRandomNumber(71, 90)).ToString();
-				code = code.Replace(random3, replacement);
-			}
-
-			bool hasNumber = false, hasChar = false;
-			for (int charIndex = 0; charIndex < code.Length; charIndex++)
-			{
-				if (code[charIndex] >= '0' && code[charIndex] <= '9')
-					hasNumber = true;
-				if (code[charIndex] >= 'A' && code[charIndex] <= 'Z')
-					hasChar = true;
-				if (hasNumber && hasChar)
-					break;
-			}
-
-			if (!hasNumber)
-				code += ((char)UtilityService.GetRandomNumber(48, 57)).ToString();
-
-			if (!hasChar)
-			{
-				replacement = "O";
-				while (replacement.Equals("O"))
-					replacement = ((char)UtilityService.GetRandomNumber(65, 90)).ToString();
-				code += replacement;
-			}
-
-			return code.Right(length);
 		}
 		#endregion
 
