@@ -669,15 +669,16 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the JSON Web Token
 		/// </summary>
-		/// <param name="sessionID"></param>
 		/// <param name="userID"></param>
 		/// <param name="accessToken"></param>
+		/// <param name="sessionID"></param>
 		/// <param name="aesKey"></param>
-		/// <param name="signKey"></param>
-		/// <param name="additional"></param>
+		/// <param name="jwtKey"></param>
+		/// <param name="postAction"></param>
 		/// <returns></returns>
-		public static string GetJSONWebToken(string sessionID, string userID, string accessToken, string aesKey, string signKey, Action<JObject> additional = null)
+		public static string GetJSONWebToken(string userID, string accessToken, string sessionID, string aesKey, string jwtKey, Action<JObject> postAction = null)
 		{
+			// standard
 			var payload = new JObject()
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
@@ -686,25 +687,29 @@ namespace net.vieapps.Components.Security
 				{ "jtk", accessToken },
 				{ "jts", User.GetSignature(sessionID, accessToken, aesKey) }
 			};
-			additional?.Invoke(payload);
-			return JSONWebToken.Encode(payload, signKey);
+
+			// post action
+			postAction?.Invoke(payload);
+
+			// return the encoded JSON Web Token
+			return JSONWebToken.Encode(payload, jwtKey);
 		}
 
 		/// <summary>
-		/// Parses the JSON Web Token (return a tuple value with first element is session identity, second element is user identity, third element is access token)
+		/// Parses the JSON Web Token (return a tuple value with first element is user identity, second element is access token, and last element is session identity)
 		/// </summary>
-		/// <param name="jwt"></param>
+		/// <param name="token"></param>
 		/// <param name="aesKey"></param>
-		/// <param name="signKey"></param>
-		/// <param name="additional"></param>
+		/// <param name="jwtKey"></param>
+		/// <param name="postAction"></param>
 		/// <returns>The tuple with first element is session identity, second element is user identity, third element is access token</returns>
-		public static Tuple<string, string, string> ParseJSONWebToken(string jwt, string aesKey, string signKey, Action<JObject> additional = null)
+		public static Tuple<string, string, string> ParseJSONWebToken(string token, string aesKey, string jwtKey, Action<JObject> postAction = null)
 		{
 			// parse JSON Web Token
 			JObject payload = null;
 			try
 			{
-				payload = JSONWebToken.DecodeAsJObject(jwt, signKey);
+				payload = JSONWebToken.DecodeAsJObject(token, jwtKey);
 			}
 			catch (InvalidTokenSignatureException)
 			{
@@ -756,59 +761,102 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(signature) || !signature.Equals(User.GetSignature(sessionID, accessToken, aesKey)))
 				throw new InvalidTokenSignatureException("Token is invalid (Signature is invalid)");
 
-			// additional process
-			additional?.Invoke(payload);
+			// post action
+			postAction?.Invoke(payload);
 
 			// return information
-			return new Tuple<string, string, string>(sessionID, userID, accessToken);
+			return new Tuple<string, string, string>(userID, accessToken, sessionID);
 		}
 		#endregion
 
-		#region Helper: authentiate ticket
+		#region Helper: authenticate token
 		/// <summary>
-		/// Gets the authenticate ticket
+		/// Gets the authenticate token (means the encrypted authenticated ticket)
 		/// </summary>
 		/// <param name="userID"></param>
+		/// <param name="accessToken"></param>
 		/// <param name="sessonID"></param>
 		/// <param name="deviceID"></param>
-		/// <param name="accessToken"></param>
 		/// <param name="expiration"></param>
 		/// <param name="persistent"></param>
 		/// <returns></returns>
-		public static string GetAuthenticateTicket(string userID, string sessonID, string deviceID, string accessToken, int expiration = 30, bool persistent = false)
+		public static string GetAuthenticateToken(string userID, string accessToken = null, string sessonID = null, string deviceID = null, int expiration = 5, bool persistent = false)
 		{
-			var data = new JObject()
-			{
-				{ "SessionID", sessonID },
-				{ "DeviceID", deviceID },
-				{ "AccessToken", accessToken }
-			};
-			var ticket = new FormsAuthenticationTicket(1, userID, DateTime.Now, DateTime.Now.AddMinutes(expiration > 0 ? expiration : 30), persistent, data.ToString(Formatting.None));
+			var data = new JObject();
+			if (!string.IsNullOrWhiteSpace(sessonID))
+				data.Add(new JProperty("SessionID", sessonID));
+			if (!string.IsNullOrWhiteSpace(sessonID))
+				data.Add(new JProperty("DeviceID", deviceID));
+			if (!string.IsNullOrWhiteSpace(accessToken))
+				data.Add(new JProperty("AccessToken", accessToken));
+
+			var ticket = new FormsAuthenticationTicket(1, userID, DateTime.Now, DateTime.Now.AddMinutes(expiration > 0 ? expiration : 5), persistent, data.ToString(Formatting.None));
 			return FormsAuthentication.Encrypt(ticket);
 		}
 
 		/// <summary>
-		/// Parses the authenticate ticket (return a tuple value with first element is user, second element is session identity, third element is device identity)
+		/// Parses the authenticate token (return a tuple value with first element is user identity, second element is access token, third element is session identity, and last element is device identity)
 		/// </summary>
 		/// <param name="ticket"></param>
 		/// <param name="rsaCrypto"></param>
 		/// <param name="aesKey"></param>
 		/// <returns></returns>
-		public static Tuple<User, string, string> ParseAuthenticateTicket(string ticket, RSACryptoServiceProvider rsaCrypto, string aesKey)
+		public static Tuple<string, string, string, string> ParseAuthenticateToken(string ticket, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
 			try
 			{
 				var authTicket = FormsAuthentication.Decrypt(ticket);
 				var data = JObject.Parse(authTicket.UserData);
-				var user = User.ParseAccessToken((data["AccessToken"] as JValue).Value as string, rsaCrypto, aesKey);
-				if (!user.ID.Equals(authTicket.Name))
-					user = new User();
-				return new Tuple<User, string, string>(user, (data["SessionID"] as JValue).Value as string, (data["DeviceID"] as JValue).Value as string);
+				var userID = authTicket.Name;
+				var accessToken = data["AccessToken"] != null
+					? (data["AccessToken"] as JValue).Value as string
+					: null;
+				var sessionID = data["SessionID"] != null
+					? (data["SessionID"] as JValue).Value as string
+					: null;
+				var deviceID = data["DeviceID"] != null
+					? (data["DeviceID"] as JValue).Value as string
+					: null;
+				return new Tuple<string, string, string, string>(userID, accessToken, sessionID, deviceID);
 			}
 			catch
 			{
-				return new Tuple<User, string, string>(new User(), "", "");
+				return new Tuple<string, string, string, string>("", "", "", "");
 			}
+		}
+		#endregion
+
+		#region Helper: passport token
+		/// <summary>
+		/// Gets the passport token
+		/// </summary>
+		/// <param name="userID"></param>
+		/// <param name="authenticateTicket"></param>
+		/// <param name="sessionID"></param>
+		/// <param name="deviceID"></param>
+		/// <param name="aesKey"></param>
+		/// <param name="jwtKey"></param>
+		/// <returns></returns>
+		public static string GetPassportToken(string userID, string authenticateTicket, string sessionID, string deviceID, string aesKey, string jwtKey)
+		{
+			return User.GetJSONWebToken(userID, authenticateTicket, sessionID, aesKey, jwtKey, payload => payload.Add(new JProperty("did", deviceID)));
+		}
+
+		/// <summary>
+		/// Parses the passport token (return a tuple value with first element is user identity, second element is authenticate ticket/access token, third element is session identity, and last element is device identity)
+		/// </summary>
+		/// <param name="token"></param>
+		/// <param name="aesKey"></param>
+		/// <param name="jwtKey"></param>
+		/// <returns></returns>
+		public static Tuple<string, string, string, string> ParsePassportToken(string token, string aesKey, string jwtKey)
+		{
+			var deviceID = "";
+			var info = User.ParseJSONWebToken(token, aesKey, jwtKey, payload => deviceID = payload["did"] != null ? (payload["did"] as JValue).Value as string : null);
+			var userID = info.Item1;
+			var accessToken = info.Item2;
+			var sessionID = info.Item3;
+			return new Tuple<string, string, string, string>(userID, accessToken, sessionID, deviceID);
 		}
 		#endregion
 
@@ -830,6 +878,7 @@ namespace net.vieapps.Components.Security
 			if (user != null)
 			{
 				this.ID = user.ID;
+				this.Name = user.Name;
 				this.Role = user.Role;
 				this.Roles = user.Roles;
 				this.Privileges = user.Privileges;
