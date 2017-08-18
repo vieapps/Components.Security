@@ -674,8 +674,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="accessToken"></param>
 		/// <param name="aesKey"></param>
 		/// <param name="signKey"></param>
+		/// <param name="additional"></param>
 		/// <returns></returns>
-		public static string GetJSONWebToken(string sessionID, string userID, string accessToken, string aesKey, string signKey)
+		public static string GetJSONWebToken(string sessionID, string userID, string accessToken, string aesKey, string signKey, Action<JObject> additional = null)
 		{
 			var payload = new JObject()
 			{
@@ -685,6 +686,7 @@ namespace net.vieapps.Components.Security
 				{ "jtk", accessToken },
 				{ "jts", User.GetSignature(sessionID, accessToken, aesKey) }
 			};
+			additional?.Invoke(payload);
 			return JSONWebToken.Encode(payload, signKey);
 		}
 
@@ -694,8 +696,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="jwt"></param>
 		/// <param name="aesKey"></param>
 		/// <param name="signKey"></param>
+		/// <param name="additional"></param>
 		/// <returns>The tuple with first element is session identity, second element is user identity, third element is access token</returns>
-		public static Tuple<string, string, string> ParseJSONWebToken(string jwt, string aesKey, string signKey)
+		public static Tuple<string, string, string> ParseJSONWebToken(string jwt, string aesKey, string signKey, Action<JObject> additional = null)
 		{
 			// parse JSON Web Token
 			JObject payload = null;
@@ -753,6 +756,9 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(signature) || !signature.Equals(User.GetSignature(sessionID, accessToken, aesKey)))
 				throw new InvalidTokenSignatureException("Token is invalid (Signature is invalid)");
 
+			// additional process
+			additional?.Invoke(payload);
+
 			// return information
 			return new Tuple<string, string, string>(sessionID, userID, accessToken);
 		}
@@ -782,7 +788,7 @@ namespace net.vieapps.Components.Security
 		}
 
 		/// <summary>
-		/// Parses the authenticate ticket and return the tuple value with first element is user, second element is session identity, third element is device identity
+		/// Parses the authenticate ticket (return a tuple value with first element is user, second element is session identity, third element is device identity)
 		/// </summary>
 		/// <param name="ticket"></param>
 		/// <param name="rsaCrypto"></param>
