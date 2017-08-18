@@ -763,34 +763,46 @@ namespace net.vieapps.Components.Security
 		/// Gets the authenticate ticket
 		/// </summary>
 		/// <param name="userID"></param>
+		/// <param name="sessonID"></param>
+		/// <param name="deviceID"></param>
 		/// <param name="accessToken"></param>
 		/// <param name="expiration"></param>
 		/// <param name="persistent"></param>
 		/// <returns></returns>
-		public static string GetAuthenticateTicket(string userID, string accessToken, int expiration = 30, bool persistent = false)
+		public static string GetAuthenticateTicket(string userID, string sessonID, string deviceID, string accessToken, int expiration = 30, bool persistent = false)
 		{
-			return FormsAuthentication.Encrypt(new FormsAuthenticationTicket(1, userID, DateTime.Now, DateTime.Now.AddMinutes(expiration > 0 ? expiration : 30), persistent, accessToken));
+			var data = new JObject()
+			{
+				{ "SessionID", sessonID },
+				{ "DeviceID", deviceID },
+				{ "AccessToken", accessToken }
+			};
+			var ticket = new FormsAuthenticationTicket(1, userID, DateTime.Now, DateTime.Now.AddMinutes(expiration > 0 ? expiration : 30), persistent, data.ToString(Formatting.None));
+			return FormsAuthentication.Encrypt(ticket);
 		}
 
 		/// <summary>
-		/// Parses the authenticate ticket
+		/// Parses the authenticate ticket and return the tuple value with first element is user, second element is session identity, third element is device identity
 		/// </summary>
 		/// <param name="ticket"></param>
 		/// <param name="rsaCrypto"></param>
 		/// <param name="aesKey"></param>
 		/// <returns></returns>
-		public static User ParseAuthenticateTicket(string ticket, RSACryptoServiceProvider rsaCrypto, string aesKey)
+		public static Tuple<User, string, string> ParseAuthenticateTicket(string ticket, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
-			var user = new User();
 			try
 			{
 				var authTicket = FormsAuthentication.Decrypt(ticket);
-				user = User.ParseAccessToken(authTicket.UserData, rsaCrypto, aesKey);
+				var data = JObject.Parse(authTicket.UserData);
+				var user = User.ParseAccessToken((data["AccessToken"] as JValue).Value as string, rsaCrypto, aesKey);
 				if (!user.ID.Equals(authTicket.Name))
 					user = new User();
+				return new Tuple<User, string, string>(user, (data["SessionID"] as JValue).Value as string, (data["DeviceID"] as JValue).Value as string);
 			}
-			catch { }
-			return user;
+			catch
+			{
+				return new Tuple<User, string, string>(new User(), "", "");
+			}
 		}
 		#endregion
 
