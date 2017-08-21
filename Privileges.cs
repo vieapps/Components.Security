@@ -51,8 +51,11 @@ namespace net.vieapps.Components.Security
 	[Serializable]
 	public class Privileges
 	{
-
-		public Privileges()
+		/// <summary>
+		/// Initializes the access privileges
+		/// </summary>
+		/// <param name="anonymousCanView">true to allow anonymous can view by default</param>
+		public Privileges(bool anonymousCanView = false)
 		{
 			this.DownloadableRoles = new HashSet<string>();
 			this.DownloadableUsers = new HashSet<string>();
@@ -66,6 +69,9 @@ namespace net.vieapps.Components.Security
 			this.ModerateUsers = new HashSet<string>();
 			this.AdministrativeRoles = new HashSet<string>();
 			this.AdministrativeUsers = new HashSet<string>();
+
+			if (anonymousCanView)
+				this.ViewableRoles.Add(SystemRole.All.ToString());
 		}
 
 		#region Properties

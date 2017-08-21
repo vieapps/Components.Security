@@ -87,13 +87,13 @@ namespace net.vieapps.Components.Security
 
 			var can = originalPrivileges != null && originalPrivileges.AdministrativeUsers != null && originalPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 			if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.AdministrativeRoles != null)
-				can = originalPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
+				can = originalPrivileges.AdministrativeRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.AdministrativeUsers != null && parentPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.AdministrativeRoles != null)
-					can = parentPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.AdministrativeRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
@@ -116,14 +116,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ModerateUsers != null && originalPrivileges.ModerateUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ModerateRoles != null)
-					can = originalPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
+					can = originalPrivileges.ModerateRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ModerateUsers != null && parentPrivileges.ModerateUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ModerateRoles != null)
-					can = parentPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.ModerateRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
@@ -146,14 +146,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.EditableUsers != null && originalPrivileges.EditableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.EditableRoles != null)
-					can = originalPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
+					can = originalPrivileges.EditableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.EditableUsers != null && parentPrivileges.EditableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.EditableRoles != null)
-					can = parentPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.EditableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
@@ -173,14 +173,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ContributiveRoles != null)
-					can = originalPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
+					can = originalPrivileges.ContributiveRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ContributiveRoles != null)
-					can = parentPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.ContributiveRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
@@ -200,14 +200,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ViewableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ViewableRoles != null)
-					can = originalPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
+					can = originalPrivileges.ViewableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ViewableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ViewableRoles != null)
-					can = parentPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.ViewableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
@@ -230,14 +230,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.DownloadableRoles != null)
-					can = originalPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
+					can = originalPrivileges.DownloadableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.DownloadableRoles != null)
-					can = parentPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
+					can = parentPrivileges.DownloadableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
 			}
 
 			return can;
