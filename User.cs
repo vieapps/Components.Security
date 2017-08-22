@@ -21,6 +21,9 @@ namespace net.vieapps.Components.Security
 	[Serializable]
 	public class User
 	{
+		/// <summary>
+		/// Initializes the new instance of an user
+		/// </summary>
 		public User()
 		{
 			this.ID = "";
@@ -52,9 +55,15 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Authentication
+		/// <summary>
+		/// Gets the authentication type
+		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public string AuthenticationType { get { return "API"; } }
 
+		/// <summary>
+		/// Gets the state that determines the user is authenticated or not
+		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public bool IsAuthenticated
 		{
@@ -940,7 +949,7 @@ namespace net.vieapps.Components.Security
 	public class UserPrincipal : IPrincipal
 	{
 		/// <summary>
-		/// Initializes an user principal
+		/// Initializes the new instance of an user principal
 		/// </summary>
 		/// <param name="user"></param>
 		public UserPrincipal(User user = null) : base()
