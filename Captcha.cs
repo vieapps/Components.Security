@@ -183,11 +183,11 @@ namespace net.vieapps.Components.Security
 			}
 
 			// create new graphic from the bitmap with random background color
-			var backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Violet, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.LightGray, Color.Tomato, Color.LightGreen, Color.White };
-			if (useSmallImage)
-				backgroundColors = new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.White };
+			var backgroundColors = useSmallImage
+				? new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.White }
+				: new Color[] { Color.Orange, Color.Thistle, Color.LightSeaGreen, Color.Violet, Color.Yellow, Color.YellowGreen, Color.NavajoWhite, Color.LightGray, Color.Tomato, Color.LightGreen, Color.White };
 
-			var securityBitmap = CreateBackroundImage(width, height, new Color[] { backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)] });
+			var securityBitmap = Captcha.CreateBackroundImage(width, height, new Color[] { backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)], backgroundColors[UtilityService.GetRandomNumber(0, backgroundColors.Length)] });
 			var securityGraph = Graphics.FromImage(securityBitmap);
 			securityGraph.SmoothingMode = SmoothingMode.AntiAlias;
 
@@ -195,8 +195,7 @@ namespace net.vieapps.Components.Security
 			if (!useSmallImage)
 			{
 				// comuting noise texts for the image
-				var texts =
-					noises != null && noises.Count > 0
+				var texts = noises != null && noises.Count > 0
 					? noises
 					: new List<string>() { "VIEApps", "vieapps.net", "VIEApps API Gateway", "VIEApps REST API" };
 
