@@ -6,11 +6,17 @@ using System.Collections.Generic;
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Presents a permission to perform an action on a specified object of a specified service
+	/// Presents a privilege (acess permission) to perform an action on a specified object of a specified service
 	/// </summary>
 	[Serializable]
 	public class Privilege
 	{
+		/// <summary>
+		/// Initializes the privilege
+		/// </summary>
+		/// <param name="serviceName"></param>
+		/// <param name="objectName"></param>
+		/// <param name="role"></param>
 		public Privilege(string serviceName = null, string objectName = null, string role = null)
 		{
 			this.ServiceName = serviceName;
@@ -46,13 +52,13 @@ namespace net.vieapps.Components.Security
 	//  --------------------------------------------------------------------------------------------
 
 	/// <summary>
-	/// Presents the working permissions of a specified service or service's object (means working permissions of a run-time entity)
+	/// Presents the privileges (access permissions) of a specified service or service's object (means access permissions of a run-time entity)
 	/// </summary>
 	[Serializable]
 	public class Privileges
 	{
 		/// <summary>
-		/// Initializes the access privileges
+		/// Initializes the privileges
 		/// </summary>
 		/// <param name="anonymousCanView">true to allow anonymous can view by default</param>
 		public Privileges(bool anonymousCanView = false)
