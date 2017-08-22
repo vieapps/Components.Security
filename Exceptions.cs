@@ -164,20 +164,6 @@ namespace net.vieapps.Components.Security
 	}
 
 	[Serializable]
-	public class LockedAccountException : AppException
-	{
-		public LockedAccountException() : base("Account is locked") { }
-
-		public LockedAccountException(string message) : base(message) { }
-
-		public LockedAccountException(Exception innerException) : base("Account is locked", innerException) { }
-
-		public LockedAccountException(string message, Exception innerException) : base(message, innerException) { }
-
-		public LockedAccountException(SerializationInfo info, StreamingContext context) : base(info, context) { }
-	}
-
-	[Serializable]
 	public class InvalidActivateInformationException : AppException
 	{
 		public InvalidActivateInformationException() : base("The information for activating is invalid") { }
