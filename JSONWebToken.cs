@@ -49,19 +49,19 @@ namespace net.vieapps.Components.Security
 
 		static JSONWebTokenHashAlgorithm GetHashAlgorithm(string algorithm)
 		{
-			switch (algorithm)
+			switch (algorithm.ToLower())
 			{
-				case "HS256":
+				case "hs256":
 					return JSONWebTokenHashAlgorithm.HS256;
 
-				case "HS384":
+				case "hs384":
 					return JSONWebTokenHashAlgorithm.HS384;
 
-				case "HS512":
+				case "hs512":
 					return JSONWebTokenHashAlgorithm.HS512;
 
 				default:
-					throw new InvalidTokenSignatureException("Algorithm not supported");
+					throw new InvalidTokenSignatureException("The hash algorithm is not supported");
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace net.vieapps.Components.Security
 				? token.ToArray('.', true)
 				: new string[] { };
 			if (parts.Length != 3)
-				throw new InvalidTokenException("Token must consist from 3 delimited by dot parts");
+				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
 
 			if (verify)
 			{
