@@ -75,6 +75,17 @@ namespace net.vieapps.Components.Security
 
 		#region Authorization
 		/// <summary>
+		/// Gets the identity of the system account
+		/// </summary>
+		internal static string SystemAccountID
+		{
+			get
+			{
+				return UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
+			}
+		}
+
+		/// <summary>
 		/// Determines an user can manage (means the user can act like an administrator)
 		/// </summary>
 		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
@@ -84,6 +95,8 @@ namespace net.vieapps.Components.Security
 		{
 			if (!this.IsAuthenticated)
 				return false;
+			else if (this.ID.IsEquals(User.SystemAccountID))
+				return true;
 
 			var can = originalPrivileges != null && originalPrivileges.AdministrativeUsers != null && originalPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 			if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.AdministrativeRoles != null)
@@ -255,8 +268,8 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsAuthorized(string serviceName, string objectName, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
-			// check
-			if (this.Role.Equals(SystemRole.SystemAdministrator))
+			// system administrator
+			if (this.Role.Equals(SystemRole.SystemAdministrator) || this.ID.IsEquals(User.SystemAccountID))
 				return true;
 
 			// prepare privileges
