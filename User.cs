@@ -9,7 +9,6 @@ using System.Xml.Serialization;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Converters;
 
 using net.vieapps.Components.Utility;
 #endregion
@@ -26,8 +25,7 @@ namespace net.vieapps.Components.Security
 		{
 			this.ID = "";
 			this.Name = "";
-			this.Role = SystemRole.All;
-			this.Roles = new List<string>();
+			this.Roles = new List<string>() { SystemRole.All.ToString() };
 			this.Privileges = new List<Privilege>();
 		}
 
@@ -43,13 +41,7 @@ namespace net.vieapps.Components.Security
 		public string Name { get; set; }
 
 		/// <summary>
-		/// Gets or sets the system role
-		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
-		public SystemRole Role { get; set; }
-
-		/// <summary>
-		/// Gets or sets the working roles (means working roles of business services)
+		/// Gets or sets the working roles (means working roles of business services and special system roles)
 		/// </summary>
 		public List<string> Roles { get; set; }
 
@@ -71,9 +63,9 @@ namespace net.vieapps.Components.Security
 				return !string.IsNullOrWhiteSpace(this.ID);
 			}
 		}
-		#endregion
 
-		#region Authorization
+		static string _SystemAccountID = null;
+
 		/// <summary>
 		/// Gets the identity of the system account
 		/// </summary>
@@ -81,8 +73,50 @@ namespace net.vieapps.Components.Security
 		{
 			get
 			{
-				return UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
+				if (string.IsNullOrWhiteSpace(User._SystemAccountID))
+					User._SystemAccountID = UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
+				return User._SystemAccountID;
 			}
+		}
+
+		static HashSet<string> _SystemAdministrators = null;
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		internal static HashSet<string> SystemAdministrators
+		{
+			get
+			{
+				if (User._SystemAdministrators == null)
+					User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet();
+				return User._SystemAdministrators;
+			}
+		}
+
+		/// <summary>
+		/// Gets the state that determines the user is system administrator
+		/// </summary>
+		public bool IsSystemAdministrator
+		{
+			get
+			{
+				return this.IsAuthenticated
+					? this.ID.Equals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
+					: false;
+			}
+		}
+		#endregion
+
+		#region Authorization
+		/// <summary>
+		/// Determines whether this user belongs to the specified role or not
+		/// </summary>
+		/// <param name="role"></param>
+		/// <returns></returns>
+		public bool IsInRole(string role)
+		{
+			return !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
 		}
 
 		/// <summary>
@@ -95,18 +129,18 @@ namespace net.vieapps.Components.Security
 		{
 			if (!this.IsAuthenticated)
 				return false;
-			else if (this.ID.IsEquals(User.SystemAccountID))
+			else if (this.IsSystemAdministrator)
 				return true;
 
 			var can = originalPrivileges != null && originalPrivileges.AdministrativeUsers != null && originalPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 			if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.AdministrativeRoles != null)
-				can = originalPrivileges.AdministrativeRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+				can = originalPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.AdministrativeUsers != null && parentPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.AdministrativeRoles != null)
-					can = parentPrivileges.AdministrativeRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -129,14 +163,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ModerateUsers != null && originalPrivileges.ModerateUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ModerateRoles != null)
-					can = originalPrivileges.ModerateRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = originalPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ModerateUsers != null && parentPrivileges.ModerateUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ModerateRoles != null)
-					can = parentPrivileges.ModerateRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -159,14 +193,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.EditableUsers != null && originalPrivileges.EditableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.EditableRoles != null)
-					can = originalPrivileges.EditableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = originalPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.EditableUsers != null && parentPrivileges.EditableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.EditableRoles != null)
-					can = parentPrivileges.EditableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -186,14 +220,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ContributiveRoles != null)
-					can = originalPrivileges.ContributiveRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = originalPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ContributiveRoles != null)
-					can = parentPrivileges.ContributiveRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -213,14 +247,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ViewableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ViewableRoles != null)
-					can = originalPrivileges.ViewableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = originalPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ViewableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.ViewableRoles != null)
-					can = parentPrivileges.ViewableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -243,14 +277,14 @@ namespace net.vieapps.Components.Security
 			{
 				can = originalPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.DownloadableRoles != null)
-					can = originalPrivileges.DownloadableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = originalPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			if (!can && parentPrivileges != null)
 			{
 				can = parentPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
 				if (!can && this.Roles != null && parentPrivileges.DownloadableRoles != null)
-					can = parentPrivileges.DownloadableRoles.Intersect(this.Roles.Union(new List<string>() { this.Role.ToString() })).Count() > 0;
+					can = parentPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
 			}
 
 			return can;
@@ -269,7 +303,7 @@ namespace net.vieapps.Components.Security
 		public bool IsAuthorized(string serviceName, string objectName, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
 			// system administrator
-			if (this.Role.Equals(SystemRole.SystemAdministrator) || this.ID.IsEquals(User.SystemAccountID))
+			if (this.IsSystemAdministrator)
 				return true;
 
 			// prepare privileges
@@ -301,15 +335,14 @@ namespace net.vieapps.Components.Security
 			workingPrivileges.ForEach(privilege =>
 			{
 				if (privilege.Actions == null || privilege.Actions.Count < 1)
-				{
-					if (getActions != null)
-						privilege.Actions = getActions.Invoke(privilege.Role.ToEnum<PrivilegeRole>());
-				}
+					privilege.Actions = getActions?.Invoke(privilege.Role.ToEnum<PrivilegeRole>());
+
 				else
 				{
 					var actions = new List<Action>();
 					if (privilege.Role.Equals(PrivilegeRole.Administrator.ToString()))
 						actions.Add(Action.Full);
+
 					else if (privilege.Role.Equals(PrivilegeRole.Moderator.ToString()))
 						actions = new List<Action>()
 						{
@@ -326,6 +359,7 @@ namespace net.vieapps.Components.Security
 							Action.View,
 							Action.Download,
 						};
+
 					else if (privilege.Role.Equals(PrivilegeRole.Editor.ToString()))
 						actions = new List<Action>()
 						{
@@ -341,6 +375,7 @@ namespace net.vieapps.Components.Security
 							Action.View,
 							Action.Download,
 						};
+
 					else if (privilege.Role.Equals(PrivilegeRole.Contributor.ToString()))
 						actions = new List<Action>()
 						{
@@ -352,6 +387,7 @@ namespace net.vieapps.Components.Security
 							Action.View,
 							Action.Download,
 						};
+
 					else
 						actions = new List<Action>()
 						{
@@ -548,23 +584,21 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the access token
 		/// </summary>
-		/// <param name="userID"></param>
-		/// <param name="userRole"></param>
-		/// <param name="userRoles"></param>
-		/// <param name="privileges"></param>
+		/// <param name="id">The string that presents the identity of the user</param>
+		/// <param name="roles">The collection that presents the roles that the user was belong to</param>
+		/// <param name="privileges">The collection that presents the access privileges that the user was got</param>
 		/// <param name="rsaCrypto"></param>
 		/// <param name="aesKey"></param>
 		/// <returns></returns>
-		public static string GetAccessToken(string userID, SystemRole userRole, List<string> userRoles, List<Privilege> privileges, RSACryptoServiceProvider rsaCrypto, string aesKey)
+		public static string GetAccessToken(string id, List<string> roles, List<Privilege> privileges, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
 			var token = new JObject()
 			{
-				{ "ID", userID },
-				{ "Role", userRole.ToString() }
+				{ "ID", id }
 			};
 
-			if (userRoles != null && userRoles.Count > 0)
-				token.Add(new JProperty("Roles", userRoles));
+			if (roles != null && roles.Count > 0)
+				token.Add(new JProperty("Roles", roles));
 
 			if (privileges != null && privileges.Count > 0)
 				token.Add(new JProperty("Privileges", privileges));
@@ -588,7 +622,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static string GetAccessToken(User user, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
-			return User.GetAccessToken(user.ID, user.Role, user.Roles, user.Privileges, rsaCrypto, aesKey);
+			return User.GetAccessToken(user.ID, user.Roles, user.Privileges, rsaCrypto, aesKey);
 		}
 
 		/// <summary>
@@ -892,7 +926,6 @@ namespace net.vieapps.Components.Security
 			{
 				this.ID = user.ID;
 				this.Name = user.Name;
-				this.Role = user.Role;
 				this.Roles = user.Roles;
 				this.Privileges = user.Privileges;
 			}
@@ -931,6 +964,17 @@ namespace net.vieapps.Components.Security
 				return this.Identity != null && (this.Identity as UserIdentity).IsAuthenticated;
 			}
 		}
+
+		/// <summary>
+		/// Determines whether the current principal is system administrator or not
+		/// </summary>
+		public bool IsSystemAdministrator
+		{
+			get
+			{
+				return this.Identity != null && (this.Identity as UserIdentity).IsSystemAdministrator;
+			}
+		}
 		#endregion
 
 		#region Methods of role-based authorization
@@ -941,7 +985,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsInRole(string role)
 		{
-			return !string.IsNullOrWhiteSpace(role) && this.Identity != null && (this.Identity as UserIdentity).Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
+			return !string.IsNullOrWhiteSpace(role) && this.Identity != null && (this.Identity as UserIdentity).IsInRole(role);
 		}
 
 		/// <summary>

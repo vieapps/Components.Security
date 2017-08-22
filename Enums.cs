@@ -130,22 +130,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Authenticated users of a specified serivce/site (means signed-in accounts that marked as member of a service/site)
 		/// </summary>
-		Authorized,
-
-		/// <summary>
-		/// Moderator of a specified serivce/site (means signed-in accounts that marked as moderator of a service/site)
-		/// </summary>
-		Moderator,
-
-		/// <summary>
-		/// Administrator of a specified serivce/site (means signed-in accounts that marked as moderator of a service/site)
-		/// </summary>
-		Administrator,
-
-		/// <summary>
-		/// Administrator of the whole system/services
-		/// </summary>
-		SystemAdministrator
+		Authorized
 	}
 
 	//  --------------------------------------------------------------------------------------------
