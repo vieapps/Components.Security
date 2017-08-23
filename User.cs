@@ -111,7 +111,7 @@ namespace net.vieapps.Components.Security
 			get
 			{
 				return this.IsAuthenticated
-					? this.ID.Equals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
+					? this.ID.IsEquals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
 					: false;
 			}
 		}
@@ -994,7 +994,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsInRole(string role)
 		{
-			return !string.IsNullOrWhiteSpace(role) && this.Identity != null && (this.Identity as UserIdentity).IsInRole(role);
+			return this.Identity != null && (this.Identity as UserIdentity).IsInRole(role);
 		}
 
 		/// <summary>
