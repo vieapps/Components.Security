@@ -92,7 +92,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the identity of the system account
 		/// </summary>
-		public static string SystemAccountID
+		internal static string SystemAccountID
 		{
 			get
 			{
@@ -932,7 +932,7 @@ namespace net.vieapps.Components.Security
 			{
 				this.ID = user.ID;
 				this.Name = user.Name;
-				this.Roles = (user.Roles ?? new List<string>()).Distinct().ToList();
+				this.Roles = user.Roles;
 				this.Privileges = user.Privileges;
 			}
 		}
