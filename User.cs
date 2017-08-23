@@ -28,7 +28,7 @@ namespace net.vieapps.Components.Security
 		{
 			this.ID = "";
 			this.Name = "";
-			this.Roles = new List<string>() { SystemRole.All.ToString() };
+			this.Roles = new List<string>();
 			this.Privileges = new List<Privilege>();
 		}
 
@@ -73,12 +73,26 @@ namespace net.vieapps.Components.Security
 			}
 		}
 
+		/// <summary>
+		/// Gets the state that determines the user is system administrator
+		/// </summary>
+		[JsonIgnore, XmlIgnore]
+		public bool IsSystemAdministrator
+		{
+			get
+			{
+				return this.IsAuthenticated
+					? this.ID.IsEquals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
+					: false;
+			}
+		}
+
 		static string _SystemAccountID = null;
 
 		/// <summary>
 		/// Gets the identity of the system account
 		/// </summary>
-		internal static string SystemAccountID
+		public static string SystemAccountID
 		{
 			get
 			{
@@ -93,26 +107,13 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the collection of the system administrators
 		/// </summary>
-		internal static HashSet<string> SystemAdministrators
+		public static HashSet<string> SystemAdministrators
 		{
 			get
 			{
 				if (User._SystemAdministrators == null)
 					User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet();
 				return User._SystemAdministrators;
-			}
-		}
-
-		/// <summary>
-		/// Gets the state that determines the user is system administrator
-		/// </summary>
-		public bool IsSystemAdministrator
-		{
-			get
-			{
-				return this.IsAuthenticated
-					? this.ID.IsEquals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
-					: false;
 			}
 		}
 		#endregion
@@ -599,18 +600,14 @@ namespace net.vieapps.Components.Security
 		/// <param name="rsaCrypto"></param>
 		/// <param name="aesKey"></param>
 		/// <returns></returns>
-		public static string GetAccessToken(string id, List<string> roles, List<Privilege> privileges, RSACryptoServiceProvider rsaCrypto, string aesKey)
+		public static string GetAccessToken(string id, IEnumerable<string> roles, IEnumerable<Privilege> privileges, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
 			var token = new JObject()
 			{
-				{ "ID", id }
+				{ "ID", id },
+				{ "Roles", (roles ?? new List<string>()).Distinct().ToJArray() },
+				{ "Privileges", (privileges ?? new List<Privilege>()).ToJArray() }
 			};
-
-			if (roles != null && roles.Count > 0)
-				token.Add(new JProperty("Roles", roles));
-
-			if (privileges != null && privileges.Count > 0)
-				token.Add(new JProperty("Privileges", privileges));
 
 			var key = UtilityService.GetUUID();
 			token = new JObject()
@@ -631,7 +628,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static string GetAccessToken(User user, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
-			return User.GetAccessToken(user.ID, user.Roles, user.Privileges, rsaCrypto, aesKey);
+			return User.GetAccessToken(user.ID, (user.Roles ?? new List<string>()).Concat((SystemRole.All.ToString() + (!user.ID.Equals("") ? "," + SystemRole.Authenticated.ToString() : "")).ToList()), user.Privileges, rsaCrypto, aesKey);
 		}
 
 		/// <summary>
@@ -935,7 +932,7 @@ namespace net.vieapps.Components.Security
 			{
 				this.ID = user.ID;
 				this.Name = user.Name;
-				this.Roles = user.Roles;
+				this.Roles = (user.Roles ?? new List<string>()).Distinct().ToList();
 				this.Privileges = user.Privileges;
 			}
 		}
