@@ -27,7 +27,6 @@ namespace net.vieapps.Components.Security
 		public User()
 		{
 			this.ID = "";
-			this.Name = "";
 			this.Roles = new List<string>();
 			this.Privileges = new List<Privilege>();
 		}
@@ -37,11 +36,6 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the identity
 		/// </summary>
 		public string ID { get; set; }
-
-		/// <summary>
-		/// Gets or sets the name
-		/// </summary>
-		public string Name { get; set; }
 
 		/// <summary>
 		/// Gets or sets the working roles (means working roles of business services and special system roles)
@@ -931,11 +925,12 @@ namespace net.vieapps.Components.Security
 			if (user != null)
 			{
 				this.ID = user.ID;
-				this.Name = user.Name;
 				this.Roles = user.Roles;
 				this.Privileges = user.Privileges;
 			}
 		}
+
+		public string Name { get { return this.ID; } }
 	}
 
 	// -----------------------------------------------------
