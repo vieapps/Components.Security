@@ -8,6 +8,7 @@ using System.Web.Security;
 using System.Xml.Serialization;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 using net.vieapps.Components.Utility;
@@ -27,6 +28,7 @@ namespace net.vieapps.Components.Security
 		public User()
 		{
 			this.ID = "";
+			this.Status = AccountStatus.Activated;
 			this.Roles = new List<string>();
 			this.Privileges = new List<Privilege>();
 		}
@@ -36,6 +38,12 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the identity
 		/// </summary>
 		public string ID { get; set; }
+
+		/// <summary>
+		/// Gets or sets the status
+		/// </summary>
+		[JsonConverter(typeof(StringEnumConverter))]
+		public AccountStatus Status { get; set; }
 
 		/// <summary>
 		/// Gets or sets the working roles (means working roles of business services and special system roles)
@@ -622,7 +630,10 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static string GetAccessToken(User user, RSACryptoServiceProvider rsaCrypto, string aesKey)
 		{
-			return User.GetAccessToken(user.ID, (user.Roles ?? new List<string>()).Concat((SystemRole.All.ToString() + (!user.ID.Equals("") ? "," + SystemRole.Authenticated.ToString() : "")).ToList()), user.Privileges, rsaCrypto, aesKey);
+			var roles = SystemRole.All.ToString()
+				+ (!user.ID.Equals("") ? "," + SystemRole.Authenticated.ToString() : "")
+				+ (user.IsSystemAdministrator ? "," + SystemRole.SystemAdministrator.ToString() : "");
+			return User.GetAccessToken(user.ID, (user.Roles ?? new List<string>()).Concat(roles.ToList()), user.Privileges, rsaCrypto, aesKey);
 		}
 
 		/// <summary>

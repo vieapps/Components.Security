@@ -118,19 +118,24 @@ namespace net.vieapps.Components.Security
 	public enum SystemRole
 	{
 		/// <summary>
-		/// All users (mean all kinds of users, include anonymous/visitor)
+		/// All kinds of users (include anonymous/visitor)
 		/// </summary>
 		All,
 
 		/// <summary>
-		/// Authenticated users (means all users that are signed-in with an account)
+		/// All kinds of users that are marked as signed-in account
 		/// </summary>
 		Authenticated,
 
 		/// <summary>
-		/// Authenticated users of a specified serivce/site (means signed-in accounts that marked as member of a service/site)
+		/// Signed-in accounts that marked as member of a service/site
 		/// </summary>
-		Authorized
+		Authorized,
+
+		/// <summary>
+		/// Signed-in accounts that mark as system administrator
+		/// </summary>
+		SystemAdministrator,
 	}
 
 	//  --------------------------------------------------------------------------------------------
@@ -194,6 +199,35 @@ namespace net.vieapps.Components.Security
 		/// Presents the Windows LDAP account
 		/// </summary>
 		Windows
+	}
+
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// Available status of an user's account
+	/// </summary>
+	[Serializable]
+	public enum AccountStatus
+	{
+		/// <summary>
+		/// Presents the registered account (but not yet activate)
+		/// </summary>
+		Registered,
+
+		/// <summary>
+		/// Presents the activated account
+		/// </summary>
+		Activated,
+
+		/// <summary>
+		/// Presents the locked account
+		/// </summary>
+		Locked,
+
+		/// <summary>
+		/// Presents the disabled account
+		/// </summary>
+		Disabled
 	}
 
 	//  --------------------------------------------------------------------------------------------
