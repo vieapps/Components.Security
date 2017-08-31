@@ -28,7 +28,6 @@ namespace net.vieapps.Components.Security
 		public User()
 		{
 			this.ID = "";
-			this.Status = AccountStatus.Activated;
 			this.Roles = new List<string>();
 			this.Privileges = new List<Privilege>();
 		}
@@ -38,12 +37,6 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the identity
 		/// </summary>
 		public string ID { get; set; }
-
-		/// <summary>
-		/// Gets or sets the status
-		/// </summary>
-		[JsonConverter(typeof(StringEnumConverter))]
-		public AccountStatus Status { get; set; }
 
 		/// <summary>
 		/// Gets or sets the working roles (means working roles of business services and special system roles)
