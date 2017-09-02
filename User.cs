@@ -72,13 +72,28 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsSystemAdministrator
+		internal bool IsSystemAdministrator
 		{
 			get
 			{
 				return this.IsAuthenticated
 					? this.ID.IsEquals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
 					: false;
+			}
+		}
+
+		static HashSet<string> _SystemAdministrators = null;
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		internal static HashSet<string> SystemAdministrators
+		{
+			get
+			{
+				if (User._SystemAdministrators == null)
+					User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet();
+				return User._SystemAdministrators;
 			}
 		}
 
@@ -94,21 +109,6 @@ namespace net.vieapps.Components.Security
 				if (string.IsNullOrWhiteSpace(User._SystemAccountID))
 					User._SystemAccountID = UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
 				return User._SystemAccountID;
-			}
-		}
-
-		static HashSet<string> _SystemAdministrators = null;
-
-		/// <summary>
-		/// Gets the collection of the system administrators
-		/// </summary>
-		public static HashSet<string> SystemAdministrators
-		{
-			get
-			{
-				if (User._SystemAdministrators == null)
-					User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet();
-				return User._SystemAdministrators;
 			}
 		}
 		#endregion

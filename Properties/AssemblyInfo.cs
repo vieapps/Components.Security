@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 // visible related information to some special components
 [assembly: InternalsVisibleTo("VIEApps.Services.APIGateway")]
 [assembly: InternalsVisibleTo("VIEApps.Services.Users")]
+[assembly: InternalsVisibleTo("VIEApps.Services.Users.Component")]
 
 // Version information for an assembly consists of the following four values:
 //
