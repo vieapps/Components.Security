@@ -104,6 +104,26 @@ namespace net.vieapps.Components.Security
 		Unlock,
 
 		/// <summary>
+		/// Books an object
+		/// </summary>
+		Book,
+
+		/// <summary>
+		/// Gives an object
+		/// </summary>
+		Give,
+
+		/// <summary>
+		/// Sends an object
+		/// </summary>
+		Send,
+
+		/// <summary>
+		/// Returns an object
+		/// </summary>
+		Return,
+
+		/// <summary>
 		/// All actions
 		/// </summary>
 		Full
