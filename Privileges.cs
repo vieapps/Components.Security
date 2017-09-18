@@ -14,14 +14,19 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the privilege
 		/// </summary>
+		public Privilege() : this(null, null, null) { }
+
+		/// <summary>
+		/// Initializes the privilege
+		/// </summary>
 		/// <param name="serviceName"></param>
 		/// <param name="objectName"></param>
 		/// <param name="role"></param>
-		public Privilege(string serviceName = null, string objectName = null, string role = null)
+		public Privilege(string serviceName, string objectName, string role)
 		{
-			this.ServiceName = serviceName;
-			this.ObjectName = objectName;
-			this.Role = role;
+			this.ServiceName = serviceName ?? "";
+			this.ObjectName = objectName ?? "";
+			this.Role = role ?? PrivilegeRole.Viewer.ToString();
 			this.Actions = new List<string>();
 		}
 

@@ -134,8 +134,6 @@ namespace net.vieapps.Components.Security
 		{
 			if (!this.IsAuthenticated)
 				return false;
-			else if (this.IsSystemAdministrator)
-				return true;
 
 			var can = originalPrivileges != null && originalPrivileges.AdministrativeUsers != null && originalPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
 			if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.AdministrativeRoles != null)
@@ -307,10 +305,6 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsAuthorized(string serviceName, string objectName, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
-			// system administrator
-			if (this.IsSystemAdministrator)
-				return true;
-
 			// prepare privileges
 			var workingPrivileges = this.Privileges != null && this.Privileges.Count > 0
 				? this.Privileges
