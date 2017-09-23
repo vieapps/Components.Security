@@ -298,12 +298,13 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="serviceName">The name of the service</param>
 		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
 		/// <param name="action">The action to perform on the object of this service</param>
 		/// <param name="privileges">The working privileges of the object (entity)</param>
 		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
 		/// <param name="getActions">The function to prepare the actions of each privilege</param>
 		/// <returns></returns>
-		public bool IsAuthorized(string serviceName, string objectName, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
+		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
 			// prepare privileges
 			var workingPrivileges = this.Privileges != null && this.Privileges.Count > 0
@@ -318,15 +319,15 @@ namespace net.vieapps.Components.Security
 				{
 					workingPrivileges = new List<Privilege>();
 					if (this.CanManage(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, PrivilegeRole.Administrator.ToString()));
+						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Administrator.ToString()));
 					else if (this.CanModerate(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, PrivilegeRole.Moderator.ToString()));
+						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Moderator.ToString()));
 					else if (this.CanEdit(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, PrivilegeRole.Editor.ToString()));
+						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Editor.ToString()));
 					else if (this.CanContribute(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, PrivilegeRole.Contributor.ToString()));
+						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Contributor.ToString()));
 					else if (this.CanView(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, PrivilegeRole.Viewer.ToString()));
+						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Viewer.ToString()));
 				}
 			}
 
@@ -398,8 +399,12 @@ namespace net.vieapps.Components.Security
 				}
 			});
 
-			// check permission
-			var workingPrivilege = workingPrivileges.FirstOrDefault(p => serviceName.Equals(p.ServiceName) && objectName.Equals(p.ObjectName));
+			// get the matched privilege
+			var workingPrivilege = !string.IsNullOrWhiteSpace(objectIdentity)
+				? workingPrivileges.FirstOrDefault(p => serviceName.IsEquals(p.ServiceName) && objectName.IsEquals(p.ObjectName) && objectIdentity.IsEquals(p.ObjectIdentity))
+				: workingPrivileges.FirstOrDefault(p => serviceName.IsEquals(p.ServiceName) && objectName.IsEquals(string.IsNullOrWhiteSpace(objectName) ? "" : p.ObjectName));
+
+			// return the state that determine user has action or not
 			return workingPrivilege != null
 				? workingPrivilege.Actions.FirstOrDefault(a => a.Equals(Action.Full.ToString()) || a.Equals(action.ToString())) != null
 				: false;
@@ -1060,14 +1065,15 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="serviceName">The name of the service</param>
 		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
 		/// <param name="action">The action to perform on the object of this service</param>
 		/// <param name="privileges">The working privileges of the object (entity)</param>
 		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
 		/// <param name="getActions">The function to prepare the actions of each privilege</param>
 		/// <returns></returns>
-		public bool IsAuthorized(string serviceName, string objectName, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
+		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
-			return this.Identity != null && (this.Identity as UserIdentity).IsAuthorized(serviceName, objectName, action, privileges, getPrivileges, getActions);
+			return this.Identity != null && (this.Identity as UserIdentity).IsAuthorized(serviceName, objectName, objectIdentity, action, privileges, getPrivileges, getActions);
 		}
 		#endregion
 

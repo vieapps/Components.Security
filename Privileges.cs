@@ -14,7 +14,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the privilege
 		/// </summary>
-		public Privilege() : this(null, null, null) { }
+		public Privilege() : this(null, null, null, null) { }
 
 		/// <summary>
 		/// Initializes the privilege
@@ -22,10 +22,11 @@ namespace net.vieapps.Components.Security
 		/// <param name="serviceName"></param>
 		/// <param name="objectName"></param>
 		/// <param name="role"></param>
-		public Privilege(string serviceName, string objectName, string role)
+		public Privilege(string serviceName, string objectName, string objectIdentity, string role)
 		{
 			this.ServiceName = serviceName ?? "";
 			this.ObjectName = objectName ?? "";
+			this.ObjectIdentity = objectIdentity ?? "";
 			this.Role = role ?? PrivilegeRole.Viewer.ToString();
 			this.Actions = new List<string>();
 		}
@@ -40,6 +41,11 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the name of service's object
 		/// </summary>
 		public string ObjectName { get; set; }
+
+		/// <summary>
+		/// Gets or sets the identity of service's object
+		/// </summary>
+		public string ObjectIdentity { get; set; }
 
 		/// <summary>
 		/// Gets or sets the working role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see>, if no role was provided then the actions are use to considering the privilege)
