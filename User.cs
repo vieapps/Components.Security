@@ -307,15 +307,13 @@ namespace net.vieapps.Components.Security
 		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<User, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 		{
 			// prepare privileges
-			var workingPrivileges = this.Privileges != null && this.Privileges.Count > 0
+			var workingPrivileges = this.Privileges != null && this.Privileges.Count > 0 && this.Privileges.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals(objectName) && p.ObjectIdentity.IsEquals(objectIdentity)) != null
 				? this.Privileges
 				: null;
-
 			if (workingPrivileges == null)
 			{
-				if (getPrivileges != null)
-					workingPrivileges = getPrivileges.Invoke(this, privileges);
-				else
+				workingPrivileges = getPrivileges?.Invoke(this, privileges);
+				if (getPrivileges == null)
 				{
 					workingPrivileges = new List<Privilege>();
 					if (this.CanManage(privileges))
@@ -332,18 +330,16 @@ namespace net.vieapps.Components.Security
 			}
 
 			// prepare actions
-			workingPrivileges.ForEach(privilege =>
+			workingPrivileges.Where(privilege => privilege.Actions == null || privilege.Actions.Count < 1).ForEach(p =>
 			{
-				if (privilege.Actions == null || privilege.Actions.Count < 1)
-					privilege.Actions = getActions?.Invoke(privilege.Role.ToEnum<PrivilegeRole>());
-
-				else
+				p.Actions = getActions?.Invoke(p.Role.ToEnum<PrivilegeRole>());
+				if (p.Actions == null || p.Actions.Count < 1)
 				{
 					var actions = new List<Action>();
-					if (privilege.Role.Equals(PrivilegeRole.Administrator.ToString()))
+					if (p.Role.Equals(PrivilegeRole.Administrator.ToString()))
 						actions.Add(Action.Full);
 
-					else if (privilege.Role.Equals(PrivilegeRole.Moderator.ToString()))
+					else if (p.Role.Equals(PrivilegeRole.Moderator.ToString()))
 						actions = new List<Action>()
 						{
 							Action.CheckIn,
@@ -360,7 +356,7 @@ namespace net.vieapps.Components.Security
 							Action.Download,
 						};
 
-					else if (privilege.Role.Equals(PrivilegeRole.Editor.ToString()))
+					else if (p.Role.Equals(PrivilegeRole.Editor.ToString()))
 						actions = new List<Action>()
 						{
 							Action.CheckIn,
@@ -376,7 +372,7 @@ namespace net.vieapps.Components.Security
 							Action.Download,
 						};
 
-					else if (privilege.Role.Equals(PrivilegeRole.Contributor.ToString()))
+					else if (p.Role.Equals(PrivilegeRole.Contributor.ToString()))
 						actions = new List<Action>()
 						{
 							Action.CheckIn,
@@ -395,14 +391,17 @@ namespace net.vieapps.Components.Security
 							Action.Download,
 						};
 
-					privilege.Actions = actions.Select(a => a.ToString()).ToList();
+					p.Actions = actions.Select(a => a.ToString()).ToList();
 				}
 			});
 
-			// get the matched privilege
-			var workingPrivilege = !string.IsNullOrWhiteSpace(objectIdentity)
-				? workingPrivileges.FirstOrDefault(p => serviceName.IsEquals(p.ServiceName) && objectName.IsEquals(p.ObjectName) && objectIdentity.IsEquals(p.ObjectIdentity))
-				: workingPrivileges.FirstOrDefault(p => serviceName.IsEquals(p.ServiceName) && objectName.IsEquals(string.IsNullOrWhiteSpace(objectName) ? "" : p.ObjectName));
+			// get the first matched privilege
+			var workingPrivilege = workingPrivileges.FirstOrDefault(p =>
+			{
+				return p.ServiceName.IsEquals(serviceName)
+					&& p.ObjectName.IsEquals(string.IsNullOrWhiteSpace(objectName) ? "" : objectName)
+					&& p.ObjectIdentity.IsEquals(string.IsNullOrWhiteSpace(objectIdentity) ? "" : objectIdentity);
+			});
 
 			// return the state that determine user has action or not
 			return workingPrivilege != null
