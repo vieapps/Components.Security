@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Security.Cryptography;
+using System.Web;
 using System.Web.Security;
 using System.Xml.Serialization;
 
@@ -872,6 +873,36 @@ namespace net.vieapps.Components.Security
 			{
 				return new Tuple<string, string, string, string>("", "", "", "");
 			}
+		}
+
+		/// <summary>
+		/// Gets the authenticate cookie (means the cookie with encrypted authenticated ticket)
+		/// </summary>
+		/// <param name="userID"></param>
+		/// <param name="accessToken"></param>
+		/// <param name="sessonID"></param>
+		/// <param name="deviceID"></param>
+		/// <param name="expiration"></param>
+		/// <param name="persistent"></param>
+		/// <returns></returns>
+		public static HttpCookie GetAuthenticateCookie(string userID, string accessToken = null, string sessonID = null, string deviceID = null, int expiration = 5, bool persistent = false)
+		{
+			return new HttpCookie(FormsAuthentication.FormsCookieName)
+			{
+				Value = User.GetAuthenticateToken(userID, accessToken, sessonID, deviceID, expiration, persistent),
+				HttpOnly = true
+			};
+		}
+
+		/// <summary>
+		/// Gets the authenticate cookie (means the cookie with encrypted authenticated ticket)
+		/// </summary>
+		/// <param name="userID"></param>
+		/// <param name="persistent"></param>
+		/// <returns></returns>
+		public static HttpCookie GetAuthenticateCookie(string userID, bool persistent)
+		{
+			return User.GetAuthenticateCookie(userID, null, null, null, FormsAuthentication.Timeout.TotalMinutes.CastAs<int>(), persistent);
 		}
 		#endregion
 

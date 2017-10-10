@@ -32,4 +32,4 @@ using System.Runtime.CompilerServices;
 //
 [assembly: AssemblyVersion("10.1")]
 [assembly: AssemblyFileVersion("10.1")]
-[assembly: AssemblyInformationalVersion("10.1.priv-2017.09.23")]
+[assembly: AssemblyInformationalVersion("10.1.athc-2017.09.27")]

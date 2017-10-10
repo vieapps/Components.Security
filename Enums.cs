@@ -197,4 +197,43 @@ namespace net.vieapps.Components.Security
 		Administrator
 	}
 
+	//  --------------------------------------------------------------------------------------------
+
+	/// <summary>
+	/// All available approval statuses
+	/// </summary>
+	[Serializable]
+	public enum ApprovalStatus
+	{
+		/// <summary>
+		/// Draft mean the content is in editing by owner.
+		/// </summary>
+		Draft,
+
+		/// <summary>
+		/// Pending mean the content is submited for approval review.
+		/// </summary>
+		Pending,
+
+		/// <summary>
+		/// Rejected mean the content is rejected by reviewer and need to re-edit.
+		/// </summary>
+		Rejected,
+
+		/// <summary>
+		/// Approved mean the content is approved but await for publishing to public.
+		/// </summary>
+		Approved,
+
+		/// <summary>
+		/// Published mean the content is published to public.
+		/// </summary>
+		Published,
+
+		/// <summary>
+		/// Archieved mean the content is archieved for using with other purpose in the furture.
+		/// </summary>
+		Archieved,
+	}
+
 }
