@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
-using System.Web;
+using System.IO;
 
 using net.vieapps.Components.Utility;
 #endregion
@@ -138,15 +138,15 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
-		#region Generate captcha image and flush into HttpResponse object
+		#region Generate captcha image
 		/// <summary>
 		/// Generates captcha images
 		/// </summary>
-		/// <param name="output">The HttResponse object to export captcha image to</param>
 		/// <param name="code">The string that presents encrypted code for generating</param>
 		/// <param name="useSmallImage">true to use small image</param>
 		/// <param name="noises">The collection of noise texts</param>
-		public static void GenerateImage(this HttpResponse output, string code, bool useSmallImage = true, List<string> noises = null)
+		/// <returns>The stream that contains captcha image in JPEG format</returns>
+		public static byte[] GenerateImage(string code, bool useSmallImage = true, List<string> noises = null)
 		{
 			// check code
 			if (!code.Equals(""))
@@ -381,15 +381,14 @@ namespace net.vieapps.Components.Security
 				}
 
 			// export as JPEG image
-			output.Cache.SetNoStore();
-			output.ContentType = "image/jpeg";
-			output.Clear();
-			noisedBitmap.Save(output.OutputStream, ImageFormat.Jpeg);
-
-			// destroy temporary objects
-			securityGraph.Dispose();
-			securityBitmap.Dispose();
-			noisedBitmap.Dispose();
+			using (var stream = new MemoryStream())
+			{
+				noisedBitmap.Save(stream, ImageFormat.Jpeg);
+				securityGraph.Dispose();
+				securityBitmap.Dispose();
+				noisedBitmap.Dispose();
+				return stream.ToArray();
+			}
 		}
 
 		static Bitmap CreateBackroundImage(int width, int height, Color[] backgroundColors)

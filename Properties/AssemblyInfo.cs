@@ -30,6 +30,6 @@ using System.Runtime.CompilerServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("10.1")]
-[assembly: AssemblyFileVersion("10.1")]
-[assembly: AssemblyInformationalVersion("10.1.athc-2017.09.27")]
+[assembly: AssemblyVersion("10.1.0.2")]
+[assembly: AssemblyFileVersion("10.1.0.2")]
+[assembly: AssemblyInformationalVersion("10.1.lncm-2017.10.24")]
