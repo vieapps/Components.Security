@@ -67,35 +67,6 @@ namespace net.vieapps.Components.Security
 			}
 		}
 
-		/// <summary>
-		/// Gets the state that determines the user is system administrator
-		/// </summary>
-		[JsonIgnore, XmlIgnore]
-		internal bool IsSystemAdministrator
-		{
-			get
-			{
-				return this.IsAuthenticated
-					? this.ID.IsEquals(User.SystemAccountID) || User.SystemAdministrators.Contains(this.ID.ToLower())
-					: false;
-			}
-		}
-
-		static HashSet<string> _SystemAdministrators = null;
-
-		/// <summary>
-		/// Gets the collection of the system administrators
-		/// </summary>
-		internal static HashSet<string> SystemAdministrators
-		{
-			get
-			{
-				if (User._SystemAdministrators == null)
-					User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet();
-				return User._SystemAdministrators;
-			}
-		}
-
 		static string _SystemAccountID = null;
 
 		/// <summary>
@@ -108,6 +79,45 @@ namespace net.vieapps.Components.Security
 				if (string.IsNullOrWhiteSpace(User._SystemAccountID))
 					User._SystemAccountID = UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
 				return User._SystemAccountID;
+			}
+		}
+
+		/// <summary>
+		/// Gets the state that determines the user is system account
+		/// </summary>
+		[JsonIgnore, XmlIgnore]
+		public bool IsSystemAccount
+		{
+			get
+			{
+				return this.IsAuthenticated
+					? this.ID.IsEquals(User.SystemAccountID)
+					: false;
+			}
+		}
+
+		/// <summary>
+		/// Gets the state that determines the user is system administrator
+		/// </summary>
+		[JsonIgnore, XmlIgnore]
+		public bool IsSystemAdministrator
+		{
+			get
+			{
+				return this.IsSystemAccount || (this.IsAuthenticated && User.SystemAdministrators.Contains(this.ID.ToLower()));
+			}
+		}
+
+		static HashSet<string> _SystemAdministrators = null;
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		public static HashSet<string> SystemAdministrators
+		{
+			get
+			{
+				return User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet());
 			}
 		}
 		#endregion
