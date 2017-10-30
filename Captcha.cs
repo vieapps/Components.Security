@@ -1,10 +1,10 @@
 #region Related components
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
-using System.IO;
 
 using net.vieapps.Components.Utility;
 #endregion
@@ -428,7 +428,7 @@ namespace net.vieapps.Components.Security
 			graph.DrawImage(bitmap1, UtilityService.GetRandomNumber(0, width / 2), UtilityService.GetRandomNumber(0, height / 2));
 			graph.DrawImage(bitmap2, UtilityService.GetRandomNumber(width / 5, width / 2), UtilityService.GetRandomNumber(height / 5, height / 2));
 			graph.DrawImage(bitmap3, UtilityService.GetRandomNumber(width / 4, width / 3), UtilityService.GetRandomNumber(0, height / 3));
-			
+
 			return backroundBitmap;
 		}
 		#endregion
