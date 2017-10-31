@@ -9,9 +9,9 @@
 		<Company>VIEApps.net</Company>
 		<Product>VIEApps NGX</Product>
 		<Copyright>© 2017 VIEApps.net</Copyright>
-		<Version>10.1.0.1</Version>
-		<AssemblyVersion>10.1.0.1</AssemblyVersion>
-		<FileVersion>10.1.0.1</FileVersion>
+		<Version>10.1.0.3</Version>
+		<AssemblyVersion>10.1.0.3</AssemblyVersion>
+		<FileVersion>10.1.0.3</FileVersion>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
@@ -38,14 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CoreCompat.System.Drawing.v2" Version="[5.2.0-preview1-r131, )" DevelopmentDependency="true" />
-		<PackageReference Include="CoreCompat.System.Drawing.v2" Version="5.2.0-preview1-r131" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="runtime.linux-x64.CoreCompat.System.Drawing" Version="[1.0.0-beta009, )" DevelopmentDependency="true" />
-		<PackageReference Include="runtime.linux-x64.CoreCompat.System.Drawing" Version="1.0.0-beta009" />
-		<PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="[5.4.0-r8, )" DevelopmentDependency="true" />
-		<PackageReference Include="runtime.osx.10.10-x64.CoreCompat.System.Drawing" Version="5.4.0-r8" />
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.0.1" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.0.3" />
 	</ItemGroup>
 
 </Project>
