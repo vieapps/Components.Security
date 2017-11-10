@@ -3,21 +3,26 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
-		<Description>The general purpose security base library for development with .NET Standard 2.0 objects and microservices</Description>
-		<Authors>VIEApps.net</Authors>
-		<Company>VIEApps.net</Company>
+		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
+		<AssemblyVersion>10.1.3.1712</AssemblyVersion>
+		<FileVersion>10.1.3.1712</FileVersion>
+		<InformationalVersion>10.1 (v10.1.nstd-2017)</InformationalVersion>
 		<Product>VIEApps NGX</Product>
-		<Copyright>© 2017 VIEApps.net</Copyright>
-		<Version>10.1.1.1711</Version>
-		<AssemblyVersion>10.1.1.1711</AssemblyVersion>
-		<FileVersion>10.1.1.1711</FileVersion>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Company>VIEApps.net</Company>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
+		<Version>10.1.3.1712</Version>
+		<Title>VIEApps NGX Security Base</Title>
+		<Description>The general purpose security base library for developing apps</Description>
+		<Summary>The general purpose security base library for developing apps</Summary>
+		<Authors>VIEApps.net</Authors>
+		<Copyright>© 2017 VIEApps.net</Copyright>
+		<PackageReleaseNotes></PackageReleaseNotes>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
 		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -38,7 +43,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.1.1711" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.3.1712" />
 	</ItemGroup>
 
 </Project>
