@@ -77,7 +77,7 @@ namespace net.vieapps.Components.Security
 			get
 			{
 				if (string.IsNullOrWhiteSpace(User._SystemAccountID))
-					User._SystemAccountID = UtilityService.GetAppSetting("SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
+					User._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
 				return User._SystemAccountID;
 			}
 		}
@@ -117,7 +117,7 @@ namespace net.vieapps.Components.Security
 		{
 			get
 			{
-				return User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("SystemAdministrators", "").ToLower().ToHashSet());
+				return User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
 			}
 		}
 		#endregion
