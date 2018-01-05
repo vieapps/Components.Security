@@ -6,14 +6,14 @@
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
-		<AssemblyVersion>10.1.5.1801</AssemblyVersion>
-		<FileVersion>10.1.5.1801</FileVersion>
-		<InformationalVersion>v10.1.netstandard-2+rev:2017.12.25</InformationalVersion>
+		<AssemblyVersion>10.1.6.1801</AssemblyVersion>
+		<FileVersion>10.1.6.1801</FileVersion>
+		<InformationalVersion>v10.1.netstandard-2+rev:2018.01.05</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.1.5.1801</Version>
+		<Version>10.1.6.1801</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
@@ -44,7 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.5.1801" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.6.1801" />
 	</ItemGroup>
 
 </Project>
