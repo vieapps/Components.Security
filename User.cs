@@ -611,10 +611,10 @@ namespace net.vieapps.Components.Security
 				{ "Privileges", (privileges ?? new List<Privilege>()).ToJArray() }
 			};
 
-			var key = UtilityService.GetUUID();
+			var key = UtilityService.NewUID;
 			token = new JObject()
 			{
-				{ "Key", CryptoService.RSAEncrypt(rsaCrypto, key) },
+				{ "Key", rsaCrypto.Encrypt(key) },
 				{ "Data", token.ToString(Formatting.None).Encrypt(key) }
 			};
 
@@ -674,7 +674,7 @@ namespace net.vieapps.Components.Security
 			// decrypt key
 			try
 			{
-				decrypted = CryptoService.RSADecrypt(rsaCrypto, (token["Key"] as JValue).Value.ToString());
+				decrypted = rsaCrypto.Decrypt((token["Key"] as JValue).Value.ToString());
 			}
 			catch (Exception ex)
 			{
@@ -732,11 +732,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="sessionID"></param>
 		/// <param name="aesKey"></param>
 		/// <param name="jwtKey"></param>
-		/// <param name="postAction"></param>
+		/// <param name="onPreCompleted"></param>
 		/// <returns></returns>
-		public static string GetJSONWebToken(string userID, string accessToken, string sessionID, string aesKey, string jwtKey, Action<JObject> postAction = null)
+		public static string GetJSONWebToken(string userID, string accessToken, string sessionID, string aesKey, string jwtKey, Action<JObject> onPreCompleted = null)
 		{
-			// standard
 			var payload = new JObject()
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
@@ -746,10 +745,7 @@ namespace net.vieapps.Components.Security
 				{ "jts", User.GetSignature(sessionID, accessToken, aesKey) }
 			};
 
-			// post action
-			postAction?.Invoke(payload);
-
-			// return the encoded JSON Web Token
+			onPreCompleted?.Invoke(payload);
 			return JSONWebToken.Encode(payload, jwtKey);
 		}
 
@@ -759,9 +755,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="token"></param>
 		/// <param name="aesKey"></param>
 		/// <param name="jwtKey"></param>
-		/// <param name="postAction"></param>
+		/// <param name="onPreCompleted"></param>
 		/// <returns>The tuple with first element is session identity, second element is user identity, third element is access token</returns>
-		public static Tuple<string, string, string> ParseJSONWebToken(string token, string aesKey, string jwtKey, Action<JObject> postAction = null)
+		public static Tuple<string, string, string> ParseJSONWebToken(string token, string aesKey, string jwtKey, Action<JObject> onPreCompleted = null)
 		{
 			// parse JSON Web Token
 			JObject payload = null;
@@ -819,10 +815,8 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(signature) || !signature.Equals(User.GetSignature(sessionID, accessToken, aesKey)))
 				throw new InvalidTokenSignatureException("Token is invalid (Signature is invalid)");
 
-			// post action
-			postAction?.Invoke(payload);
-
-			// return information
+			// return
+			onPreCompleted?.Invoke(payload);
 			return new Tuple<string, string, string>(userID, accessToken, sessionID);
 		}
 		#endregion

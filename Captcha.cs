@@ -7,9 +7,9 @@ using net.vieapps.Components.Utility;
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Helper for working with captcha images
+	/// Servicing methods for working with captcha images
 	/// </summary>
-	public static partial class Captcha
+	public static class CaptchaService
 	{
 
 		#region Generate code
@@ -20,7 +20,7 @@ namespace net.vieapps.Components.Security
 		/// <returns>The encrypted string that contains code of captcha</returns>
 		public static string GenerateCode(string salt = null)
 		{
-			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + Captcha.GenerateRandomCode()).Encrypt(CryptoService.DefaultEncryptionKey, true);
+			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CryptoService.DefaultEncryptionKey, true);
 		}
 
 		/// <summary>

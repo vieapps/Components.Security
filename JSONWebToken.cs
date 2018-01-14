@@ -10,7 +10,6 @@ using net.vieapps.Components.Utility;
 
 namespace net.vieapps.Components.Security
 {
-
 	/// <summary>
 	/// All available hash algorithms for working with JSON Web Token
 	/// </summary>
@@ -127,7 +126,7 @@ namespace net.vieapps.Components.Security
 					: JSONWebTokenHashAlgorithm.HS256;
 				var signature = JSONWebToken.HashAlgorithms[algorithm](key, parts[0] + "." + parts[1]);
 				if (!signature.Equals(parts[2]))
-					throw new InvalidTokenSignatureException(string.Format("Invalid signature. Expected '{0}' but got '{1}'.", signature, parts[2]));
+					throw new InvalidTokenSignatureException($"Invalid signature. Expected '{signature}' but got '{parts[2]}'.");
 			}
 
 			return parts[1].FromBase64Url();
@@ -145,7 +144,5 @@ namespace net.vieapps.Components.Security
 		{
 			return JObject.Parse(JSONWebToken.Decode(token, key, verify));
 		}
-
 	}
-
 }
