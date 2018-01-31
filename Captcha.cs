@@ -9,7 +9,7 @@ namespace net.vieapps.Components.Security
 	/// <summary>
 	/// Servicing methods for working with captcha images
 	/// </summary>
-	public static class CaptchaService
+	public static partial class CaptchaService
 	{
 
 		#region Generate code
