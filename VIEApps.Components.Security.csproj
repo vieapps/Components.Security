@@ -6,19 +6,19 @@
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
-		<AssemblyVersion>10.1.7.1802</AssemblyVersion>
-		<FileVersion>10.1.7.1802</FileVersion>
-		<InformationalVersion>v10.1.netstandard-2+rev:2018.01.31</InformationalVersion>
+		<AssemblyVersion>10.1.8.1802</AssemblyVersion>
+		<FileVersion>10.1.8.1802</FileVersion>
+		<InformationalVersion>v10.1.netstandard-2+rev:2018.02.07</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.1.7.1802</Version>
+		<Version>10.1.8.1802</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>VIEApps NGX User Security Base</Title>
-		<Description>The general purpose base user-security for developing apps</Description>
+		<Description>The general purpose library for developing apps security base</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2018 VIEApps.net</Copyright>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
@@ -44,7 +44,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.7.1802" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.1.8.1802" />
 	</ItemGroup>
 
 </Project>
