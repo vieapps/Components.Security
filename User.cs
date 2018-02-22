@@ -611,7 +611,7 @@ namespace net.vieapps.Components.Security
 				{ "Privileges", (privileges ?? new List<Privilege>()).ToJArray() }
 			};
 
-			var key = UtilityService.NewUID;
+			var key = UtilityService.NewUUID;
 			token = new JObject()
 			{
 				{ "Key", rsaCrypto.Encrypt(key) },
