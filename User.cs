@@ -341,7 +341,15 @@ namespace net.vieapps.Components.Security
 			// prepare actions
 			workingPrivileges.Where(privilege => privilege.Actions == null || privilege.Actions.Count < 1).ForEach(p =>
 			{
-				p.Actions = getActions?.Invoke(p.Role.ToEnum<PrivilegeRole>());
+				if (getActions != null)
+					try
+					{
+						if (!Enum.TryParse(p.Role, out PrivilegeRole role))
+							role = PrivilegeRole.Viewer;
+						p.Actions = getActions(role);
+					}
+					catch { }
+
 				if (p.Actions == null || p.Actions.Count < 1)
 				{
 					var actions = new List<Action>();

@@ -1,6 +1,9 @@
 ﻿#region Related components
 using System;
 using System.Collections.Generic;
+
+using Newtonsoft.Json.Linq;
+using net.vieapps.Components.Utility;
 #endregion
 
 namespace net.vieapps.Components.Security
@@ -58,6 +61,21 @@ namespace net.vieapps.Components.Security
 		public List<string> Actions { get; set; }
 		#endregion
 
+		/// <summary>
+		/// Gets the JSON of this privilege object
+		/// </summary>
+		/// <returns></returns>
+		public JObject ToJson()
+		{
+			return new JObject()
+			{
+				{ "ServiceName", (this.ServiceName ?? "").Trim().ToLower() },
+				{ "ObjectName", (this.ObjectName ?? "").Trim().ToLower() },
+				{ "ObjectIdentity", (this.ObjectIdentity ?? "").Trim().ToLower() },
+				{ "Role", (this.Role ?? "").Trim() },
+				{ "Actions", (this.Actions ?? new List<string>()).ToJArray() }
+			};
+		}
 	}
 
 	//  --------------------------------------------------------------------------------------------
