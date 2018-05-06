@@ -11,18 +11,6 @@ namespace net.vieapps.Components.Security
 	/// </summary>
 	public static partial class CaptchaService
 	{
-
-		#region Generate code
-		/// <summary>
-		/// Generates new code of the captcha
-		/// </summary>
-		/// <param name="salt">The string to use as salt</param>
-		/// <returns>The encrypted string that contains code of captcha</returns>
-		public static string GenerateCode(string salt = null)
-		{
-			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CryptoService.DefaultEncryptionKey, true);
-		}
-
 		/// <summary>
 		/// Generates random code for using with captcha or other purpose
 		/// </summary>
@@ -102,9 +90,17 @@ namespace net.vieapps.Components.Security
 
 			return code.Right(length);
 		}
-		#endregion
 
-		#region Validate code
+		/// <summary>
+		/// Generates new code of the captcha
+		/// </summary>
+		/// <param name="salt">The string to use as salt</param>
+		/// <returns>The encrypted string that contains code of captcha</returns>
+		public static string GenerateCode(string salt = null)
+		{
+			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CaptchaService.EncryptionKey, true);
+		}
+
 		/// <summary>
 		/// Validates captcha code
 		/// </summary>
@@ -118,9 +114,9 @@ namespace net.vieapps.Components.Security
 
 			try
 			{
-				var codes = captchaCode.Decrypt(CryptoService.DefaultEncryptionKey, true).ToArray('-');
+				var codes = captchaCode.Decrypt(CaptchaService.EncryptionKey, true).ToArray('-');
 
-				var datetime = Convert.ToInt64(codes.First()).FromUnixTimestamp(false);
+				var datetime = codes.First().CastAs<long>().FromUnixTimestamp();
 				if ((DateTime.Now - datetime).TotalMinutes > 5.0)
 					return false;
 
@@ -131,7 +127,13 @@ namespace net.vieapps.Components.Security
 				return false;
 			}
 		}
-		#endregion
 
+		static string EncryptionKey
+		{
+			get
+			{
+				return UtilityService.GetAppSetting("Keys:Encryption", CryptoService.DEFAULT_PASS_PHRASE);
+			}
+		}
 	}
 }

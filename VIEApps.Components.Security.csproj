@@ -6,23 +6,23 @@
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
-		<AssemblyVersion>10.1.14.1804</AssemblyVersion>
-		<FileVersion>10.1.14.1804</FileVersion>
-		<InformationalVersion>v10.1.netstandard-2+rev:2018.04.01</InformationalVersion>
+		<AssemblyVersion>10.2.0.1805</AssemblyVersion>
+		<FileVersion>10.2.0.1805</FileVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2018.05.06</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.1.14.1804</Version>
+		<Version>10.2.0.1805</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<Title>VIEApps NGX User Security Base</Title>
-		<Description>The general purpose library for developing apps security base</Description>
+		<Description>User security base library for developing apps on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2018 VIEApps.net</Copyright>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Fix bugs of role-enum while authorizaing</PackageReleaseNotes>
+		<PackageReleaseNotes>Changes: use claims security, rename User to UserIdentity, remove access token from JWT, use ECC instead of RSA</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 	</PropertyGroup>
@@ -45,7 +45,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="VIEApps.Components.Utility" Version="10.1.14.1804" />
+	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.0.1805" />
 	</ItemGroup>
 
 </Project>

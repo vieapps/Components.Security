@@ -41,9 +41,9 @@ namespace net.vieapps.Components.Security
 		static Dictionary<JSONWebTokenHashAlgorithm, Func<string, string, string>> HashAlgorithms
 			= new Dictionary<JSONWebTokenHashAlgorithm, Func<string, string, string>>
 			{
-				{ JSONWebTokenHashAlgorithm.HS256, (key, value) => value.GetHMACSHA256(key, false).ToBase64Url(true, false)  },
-				{ JSONWebTokenHashAlgorithm.HS384, (key, value) => value.GetHMACSHA384(key, false).ToBase64Url(true, false)  },
-				{ JSONWebTokenHashAlgorithm.HS512, (key, value) => value.GetHMACSHA512(key, false).ToBase64Url(true, false)  }
+				{ JSONWebTokenHashAlgorithm.HS256, (key, value) => value.GetHMACSHA256(key, false).ToBase64Url(true)  },
+				{ JSONWebTokenHashAlgorithm.HS384, (key, value) => value.GetHMACSHA384(key, false).ToBase64Url(true)  },
+				{ JSONWebTokenHashAlgorithm.HS512, (key, value) => value.GetHMACSHA512(key, false).ToBase64Url(true)  }
 			};
 
 		static JSONWebTokenHashAlgorithm GetHashAlgorithm(string algorithm)
@@ -140,7 +140,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="verify">Whether to verify the signature (default is true).</param>
 		/// <returns>An <see cref="JObject">JObject</see> object representing the payload.</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm.</exception>
-		public static JObject DecodeAsJObject(string token, string key, bool verify = true)
+		public static JObject DecodeAsJson(string token, string key, bool verify = true)
 		{
 			return JObject.Parse(JSONWebToken.Decode(token, key, verify));
 		}
