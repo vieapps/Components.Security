@@ -1,9 +1,10 @@
-# Components.Security
-The general purpose security base library for development with .NET Standard 2.0 objects and microservices
-- Role-based security
+# VIEApps.Components.Security
+The general purpose user security base library for development apps on .NET Standard 2.0
+- Role-based security with System.Security.Claims
 - JSON Web Token
 - Access Token with privileges-based
 - ... and others
 
-## Nuget
-https://www.nuget.org/packages/VIEApps.Components.Security/
+## NuGet
+- Package ID: VIEApps.Components.Security
+- Details: https://www.nuget.org/packages/VIEApps.Components.Security
