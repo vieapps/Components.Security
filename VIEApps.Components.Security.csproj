@@ -6,14 +6,14 @@
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
-		<AssemblyVersion>10.2.0.1805</AssemblyVersion>
-		<FileVersion>10.2.0.1805</FileVersion>
-		<InformationalVersion>v10.2.netstandard-2+rev:2018.05.06</InformationalVersion>
+		<AssemblyVersion>10.2.1.1805</AssemblyVersion>
+		<FileVersion>10.2.1.1805</FileVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2018.05.07</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.2.0.1805</Version>
+		<Version>10.2.1.1805</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
@@ -22,7 +22,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2018 VIEApps.net</Copyright>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Changes: use claims security, rename User to UserIdentity, remove access token from JWT, use ECC instead of RSA</PackageReleaseNotes>
+		<PackageReleaseNotes>Changes: re-add user (backward compatible)</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 	</PropertyGroup>
@@ -41,11 +41,12 @@
 		<None Remove=".DS_Store" />
 		<None Remove=".gitattributes" />
 		<None Remove=".gitignore" />
+		<None Remove="LICENSE.md" />
 		<None Remove="README.md" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.0.1805" />
+	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.1.1805" />
 	</ItemGroup>
 
 </Project>
