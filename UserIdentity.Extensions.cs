@@ -437,17 +437,4 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 	}
-
-	/// <summary>
-	/// Presents the identity of an user (backward compatible - need update to UserIdentity)
-	/// </summary>
-	[Serializable]
-	public class User : UserIdentity, ISerializable
-	{
-		/// <summary>
-		/// Initializes an identity of an user (backward compatible - need update to UserIdentity)
-		/// </summary>
-		public User() : base() { }
-		public User(SerializationInfo serializationInfo, StreamingContext context) : base(serializationInfo, context) { }
-	}
 }

@@ -1,14 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
 		<AssemblyVersion>10.2.1.1805</AssemblyVersion>
 		<FileVersion>10.2.1.1805</FileVersion>
-		<InformationalVersion>v10.2.netstandard-2+rev:2018.05.07</InformationalVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2018.06.01</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -22,7 +21,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2018 VIEApps.net</Copyright>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Changes: re-add user (backward compatible)</PackageReleaseNotes>
+		<PackageReleaseNotes>Upgrade to latest components to avoid potential bugs</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 	</PropertyGroup>

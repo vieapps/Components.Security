@@ -97,9 +97,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="salt">The string to use as salt</param>
 		/// <returns>The encrypted string that contains code of captcha</returns>
 		public static string GenerateCode(string salt = null)
-		{
-			return (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CaptchaService.EncryptionKey, true);
-		}
+			=> (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CaptchaService.EncryptionKey, true);
 
 		/// <summary>
 		/// Validates captcha code
@@ -128,12 +126,9 @@ namespace net.vieapps.Components.Security
 			}
 		}
 
-		static string EncryptionKey
-		{
-			get
-			{
-				return UtilityService.GetAppSetting("Keys:Encryption", CryptoService.DEFAULT_PASS_PHRASE);
-			}
-		}
+		/// <summary>
+		/// Gets the encryption key for encrypting/decrypting captcha image
+		/// </summary>
+		public static string EncryptionKey => UtilityService.GetAppSetting("Keys:Encryption", CryptoService.DEFAULT_PASS_PHRASE);
 	}
 }
