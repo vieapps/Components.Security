@@ -246,7 +246,7 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="accessToken">The string that presennts the encrypted access token</param>
 		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <param name="getUserName">The function to get name of user</param>
+		/// <param name="getUserName">The function used to get name of user</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
 		public static UserIdentity ParseAccessToken(this string accessToken, BigInteger eccKey, Func<string, string> getUserName = null)
 		{
@@ -279,13 +279,14 @@ namespace net.vieapps.Components.Security
 			}
 
 			// verify hash
-			if (!token.ToBytes().GetHash("BLAKE256").SequenceEqual(hash.HexToBytes()))
+			var hashBytes = hash.HexToBytes();
+			if (!token.GetBLAKE256Hash().SequenceEqual(hashBytes))
 				throw new InvalidTokenException("Invalid hash");
 
 			// verify signature
 			try
 			{
-				if (!eccKey.GenerateECCPublicKey().Verify(hash.HexToBytes(), ECCsecp256k1.GetSignature(signature)))
+				if (!eccKey.GenerateECCPublicKey().Verify(hashBytes, ECCsecp256k1.GetSignature(signature)))
 					throw new InvalidTokenException("Invalid signature");
 			}
 			catch (Exception ex)
