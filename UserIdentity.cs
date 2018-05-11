@@ -596,7 +596,6 @@ namespace net.vieapps.Components.Security
 
 		public new void GetObjectData(SerializationInfo serializationInfo, StreamingContext context)
 		{
-			base.GetObjectData(serializationInfo, context);
 			serializationInfo.AddValue("ID", this.ID);
 			serializationInfo.AddValue("Name", this.Name);
 			serializationInfo.AddValue("SessionID", this.SessionID);
@@ -605,7 +604,7 @@ namespace net.vieapps.Components.Security
 			serializationInfo.AddValue("AuthenticationType", this.AuthenticationType);
 		}
 
-		public UserIdentity(SerializationInfo serializationInfo, StreamingContext context) : base(serializationInfo, context)
+		public UserIdentity(SerializationInfo serializationInfo, StreamingContext context)
 		{
 			this.ID = (string)serializationInfo.GetValue("ID", typeof(string));
 			this.Name = (string)serializationInfo.GetValue("Name", typeof(string));

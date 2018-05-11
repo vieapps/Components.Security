@@ -219,9 +219,9 @@ namespace net.vieapps.Components.Security
 
 			token = new JObject
 			{
-				{ "Token", ECCsecp256k1.Encrypt(eccKey.GenerateECCPublicKey(), data).ToBase64() },
+				{ "Token", eccKey.GenerateECCPublicKey().Encrypt(data).ToHex() },
 				{ "Hash", hash.ToHex() },
-				{ "Signature", ECCsecp256k1.SignAsHex(eccKey, hash) }
+				{ "Signature", ECCsecp256k1.GetSignature(eccKey.Sign(hash)) }
 			};
 
 			return token.ToString(Formatting.None).ToBase64();
@@ -266,12 +266,27 @@ namespace net.vieapps.Components.Security
 
 			// verify
 			if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(hash) || string.IsNullOrWhiteSpace(signature))
-				throw new InvalidTokenException();
+				throw new InvalidTokenException("Invalid data");
 
+			// decrypt
 			try
 			{
-				if (!ECCsecp256k1.Verify(eccKey.GenerateECCPublicKey(), hash.HexToBytes(), signature))
-					throw new InvalidTokenException();
+				token = eccKey.Decrypt(token.HexToBytes()).GetString();
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidTokenException(ex);
+			}
+
+			// verify hash
+			if (!token.ToBytes().GetHash("BLAKE256").SequenceEqual(hash.HexToBytes()))
+				throw new InvalidTokenException("Invalid hash");
+
+			// verify signature
+			try
+			{
+				if (!eccKey.GenerateECCPublicKey().Verify(hash.HexToBytes(), ECCsecp256k1.GetSignature(signature)))
+					throw new InvalidTokenException("Invalid signature");
 			}
 			catch (Exception ex)
 			{
@@ -284,7 +299,7 @@ namespace net.vieapps.Components.Security
 			// deserialize
 			try
 			{
-				var info = ECCsecp256k1.Decrypt(eccKey, token.Base64ToBytes()).GetString().ToExpandoObject();
+				var info = token.ToExpandoObject();
 				var userID = info.Get<string>("UserID");
 				var userName = getUserName?.Invoke(userID);
 				var sessionID = info.Get<string>("SessionID");
@@ -399,7 +414,7 @@ namespace net.vieapps.Components.Security
 		/// <returns>The string that presents a JSON Web Token</returns>
 		public static string GetPassportToken(this UserIdentity userIdentity, string deviceID, string encryptionKey, string shareKey, BigInteger eccKey)
 		{
-			var accessToken = UserIdentityExtentions.GetAccessToken(userIdentity, eccKey);
+			var accessToken = userIdentity.GetAccessToken(eccKey);
 			return UserIdentityExtentions.GetJSONWebToken(userIdentity.ID, userIdentity.SessionID, encryptionKey, shareKey, (token) =>
 			{
 				token["jtk"] = accessToken;
@@ -420,7 +435,7 @@ namespace net.vieapps.Components.Security
 		{
 			var accessToken = "";
 			var deviceID = "";
-			var info = UserIdentityExtentions.ParseJSONWebToken(jwtoken, encryptionKey, shareKey, (token) =>
+			var info = jwtoken.ParseJSONWebToken(encryptionKey, shareKey, (token) =>
 			{
 				accessToken = token.Get<string>("jtk");
 				deviceID = token.Get<string>("did");
@@ -429,7 +444,7 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(deviceID))
 				throw new InvalidTokenException();
 
-			var userIdentity = UserIdentityExtentions.ParseAccessToken(accessToken, eccKey, getUserName);
+			var userIdentity = accessToken.ParseAccessToken(eccKey, getUserName);
 			return !info.Item1.Equals(userIdentity.ID) || !info.Item2.Equals(userIdentity.SessionID)
 				? throw new InvalidTokenException()
 				: new Tuple<UserIdentity, string>(userIdentity, deviceID);
