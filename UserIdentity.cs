@@ -617,6 +617,22 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
+		/// <summary>
+		/// Gets the JSON
+		/// </summary>
+		/// <returns></returns>
+		public JToken ToJson()
+		{
+			return new JObject
+			{
+				{ "ID", this.ID },
+				{ "Name", this.Name },
+				{ "SessionID", this.SessionID },
+				{ "Roles", this.Roles.ToJArray() },
+				{ "Privileges", this.Privileges.ToJArray() }
+			};
+		}
+
 		#region Helper: normalize & combine privileges
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity

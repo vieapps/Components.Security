@@ -332,7 +332,7 @@ namespace net.vieapps.Components.Security
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
 				{ "uid", userID },
 				{ "jti", sessionID.Encrypt(encryptionKey, true) },
-				{ "jts", sessionID.GetHMACBLAKE256(userID) }
+				{ "jts", $"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey) }
 			};
 
 			onPreCompleted?.Invoke(payload);
@@ -394,7 +394,7 @@ namespace net.vieapps.Components.Security
 			}
 
 			var signature = token.Get<string>("jts");
-			if (string.IsNullOrWhiteSpace(signature) || !signature.Equals(sessionID.GetHMACBLAKE256(userID)))
+			if (string.IsNullOrWhiteSpace(signature) || !signature.Equals($"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey)))
 				throw new InvalidTokenSignatureException("Token is invalid (Signature is invalid)");
 
 			// return
