@@ -246,9 +246,8 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="accessToken">The string that presennts the encrypted access token</param>
 		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <param name="getUserName">The function used to get name of user</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
-		public static UserIdentity ParseAccessToken(this string accessToken, BigInteger eccKey, Func<string, string> getUserName = null)
+		public static UserIdentity ParseAccessToken(this string accessToken, BigInteger eccKey)
 		{
 			// decrypt & parse
 			string token = null, hash = null, signature = null;
@@ -302,11 +301,10 @@ namespace net.vieapps.Components.Security
 			{
 				var info = token.ToExpandoObject();
 				var userID = info.Get<string>("UserID");
-				var userName = getUserName?.Invoke(userID);
 				var sessionID = info.Get<string>("SessionID");
 				var roles = info.Get<List<string>>("Roles");
 				var privileges = info.Get<List<Privilege>>("Privileges");
-				return new UserIdentity(userID, userName, sessionID, roles, privileges);
+				return new UserIdentity(userID, sessionID, roles, privileges);
 			}
 			catch (Exception ex)
 			{
@@ -430,9 +428,8 @@ namespace net.vieapps.Components.Security
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
 		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
 		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <param name="getUserName">The function to get name of user</param>
 		/// <returns>A tuple value with first element is user identity, second element is session identity, third element is access token, and last element is device identity</returns>
-		public static Tuple<UserIdentity, string> ParsePassportToken(this string jwtoken, string encryptionKey, string shareKey, BigInteger eccKey, Func<string, string> getUserName = null)
+		public static Tuple<UserIdentity, string> ParsePassportToken(this string jwtoken, string encryptionKey, string shareKey, BigInteger eccKey)
 		{
 			var accessToken = "";
 			var deviceID = "";
@@ -445,7 +442,7 @@ namespace net.vieapps.Components.Security
 			if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(deviceID))
 				throw new InvalidTokenException();
 
-			var userIdentity = accessToken.ParseAccessToken(eccKey, getUserName);
+			var userIdentity = accessToken.ParseAccessToken(eccKey);
 			return !info.Item1.Equals(userIdentity.ID) || !info.Item2.Equals(userIdentity.SessionID)
 				? throw new InvalidTokenException()
 				: new Tuple<UserIdentity, string>(userIdentity, deviceID);

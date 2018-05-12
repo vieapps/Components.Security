@@ -32,40 +32,29 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
-		/// <param name="name">The name (for displaying) of user</param>
+		/// <param name="id">The identity of user</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string name, string authenticationType = null) : this(null, name, authenticationType) { }
+		public UserIdentity(string id, string authenticationType = null) : this(id, null, authenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="id">The identity of user</param>
-		/// <param name="name">The name (for displaying) of user</param>
-		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string name, string authenticationType = null) : this(id, name, null, authenticationType) { }
-
-		/// <summary>
-		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
-		/// </summary>
-		/// <param name="id">The identity of user</param>
-		/// <param name="name">The name (for displaying) of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string name, string sessionID, string authenticationType = null) : this(id, name, sessionID, null, null, authenticationType) { }
+		public UserIdentity(string id, string sessionID, string authenticationType = null) : this(id, sessionID, null, null, authenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="id">The identity of user</param>
-		/// <param name="name">The name (for displaying) of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="roles">The working roles</param>
 		/// <param name="privileges">The working privileges</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string name, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null) : base(authenticationType ?? "API")
+		public UserIdentity(string id, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null) : base(authenticationType ?? "API")
 		{
 			this.ID = id;
-			this.Name = name;
 			this.SessionID = sessionID;
 			this.AuthenticationType = authenticationType ?? "API";
 			this.Roles = roles ?? new List<string>();
@@ -95,7 +84,6 @@ namespace net.vieapps.Components.Security
 			this.BuildClaims(claims);
 
 			this.ID = this.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-			this.Name = this.FindFirst(ClaimTypes.Name)?.Value;
 			this.SessionID = this.FindFirst(ClaimTypes.Sid)?.Value;
 			this.AuthenticationType = this.FindFirst(ClaimTypes.AuthenticationMethod)?.Value;
 
@@ -110,9 +98,9 @@ namespace net.vieapps.Components.Security
 		public string ID { get; set; }
 
 		/// <summary>
-		/// Gets or sets name of user
+		/// Gets or name (identity) of user
 		/// </summary>
-		public override string Name { get; }
+		public override string Name => this.ID;
 
 		/// <summary>
 		/// Gets or sets identity of working session
@@ -528,7 +516,7 @@ namespace net.vieapps.Components.Security
 			if (this.FindFirst(ClaimTypes.Name) == null)
 			{
 				var preset = claims?.FirstOrDefault(claim => claim.Type.Equals(ClaimTypes.Name));
-				var value = preset?.Value ?? this.Name;
+				var value = preset?.Value ?? this.ID;
 				if (!string.IsNullOrWhiteSpace(value))
 					this.AddClaim(new Claim(ClaimTypes.Name, value));
 			}
@@ -597,7 +585,6 @@ namespace net.vieapps.Components.Security
 		public new void GetObjectData(SerializationInfo serializationInfo, StreamingContext context)
 		{
 			serializationInfo.AddValue("ID", this.ID);
-			serializationInfo.AddValue("Name", this.Name);
 			serializationInfo.AddValue("SessionID", this.SessionID);
 			serializationInfo.AddValue("AuthorizationInfo", this.GetAuthorizationInfo());
 			serializationInfo.AddValue("Label", this.Label);
@@ -607,7 +594,6 @@ namespace net.vieapps.Components.Security
 		public UserIdentity(SerializationInfo serializationInfo, StreamingContext context)
 		{
 			this.ID = (string)serializationInfo.GetValue("ID", typeof(string));
-			this.Name = (string)serializationInfo.GetValue("Name", typeof(string));
 			this.SessionID = (string)serializationInfo.GetValue("SessionID", typeof(string));
 			this.SetAuthorizationInfo((string)serializationInfo.GetValue("AuthorizationInfo", typeof(string)));
 			this.Label = (string)serializationInfo.GetValue("Label", typeof(string));
@@ -626,7 +612,6 @@ namespace net.vieapps.Components.Security
 			return new JObject
 			{
 				{ "ID", this.ID },
-				{ "Name", this.Name },
 				{ "SessionID", this.SessionID },
 				{ "Roles", this.Roles.ToJArray() },
 				{ "Privileges", this.Privileges.ToJArray() }
@@ -708,11 +693,10 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="accessToken">The string that presennts the encrypted access token</param>
 		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <param name="getUserName">The function to get name of user</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
-		public static UserIdentity ParseAccessToken(string accessToken, BigInteger eccKey, Func<string, string> getUserName = null)
+		public static UserIdentity ParseAccessToken(string accessToken, BigInteger eccKey)
 		{
-			return accessToken.ParseAccessToken(eccKey, getUserName);
+			return accessToken.ParseAccessToken(eccKey);
 		}
 		#endregion
 
@@ -767,11 +751,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
 		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
 		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <param name="getUserName">The function to get name of user</param>
 		/// <returns>A tuple value with first element is user identity, second element is session identity, third element is access token, and last element is device identity</returns>
-		public static Tuple<UserIdentity, string> ParsePassportToken(string jwtoken, string encryptionKey, string shareKey, BigInteger eccKey, Func<string, string> getUserName = null)
+		public static Tuple<UserIdentity, string> ParsePassportToken(string jwtoken, string encryptionKey, string shareKey, BigInteger eccKey)
 		{
-			return jwtoken.ParsePassportToken(encryptionKey, shareKey, eccKey, getUserName);
+			return jwtoken.ParsePassportToken(encryptionKey, shareKey, eccKey);
 		}
 		#endregion
 
