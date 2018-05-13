@@ -194,6 +194,100 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
+		#region Working with authenticate token
+		/// <summary>
+		/// Gets the authenticate token of an user that associate with a session and return a JSON Web Token
+		/// </summary>
+		/// <param name="userID">The string that presents identity of an user</param>
+		/// <param name="sessionID">The string that presents identity of working session that associated with user</param>
+		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
+		/// <param name="signKey">The passphrase that used to sign the token</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>A JSON Web Token that presents the authenticate token</returns>
+		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
+		{
+			var payload = new JObject
+			{
+				{ "iat", DateTime.Now.ToUnixTimestamp() },
+				{ "uid", userID },
+				{ "sid", sessionID.HexToBytes().Encrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex() },
+				{ "sig", $"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey) }
+			};
+			onPreCompleted?.Invoke(payload);
+			return JSONWebToken.Encode(payload, signKey);
+		}
+
+		/// <summary>
+		/// Gets the authenticate token of an user and return a JSON Web Token
+		/// </summary>
+		/// <param name="user">The identity of an user</param>
+		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
+		/// <param name="signKey">The passphrase that used to sign the token</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>A JSON Web Token that presents the authenticate token</returns>
+		public static string GetAuthenticateToken(this UserIdentity user, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
+			=> UserIdentityExtentions.GetAuthenticateToken(user.ID, user.SessionID, encryptionKey, signKey, onPreCompleted);
+
+		/// <summary>
+		/// Parses the given authenticate token and return an <see cref="UserIdentity">UserIdentity</see> object
+		/// </summary>
+		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
+		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
+		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the authenticate token</returns>
+		public static UserIdentity ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string shareKey, Action<JObject, UserIdentity> onPreCompleted = null)
+		{
+			try
+			{
+				// decode JSON Web Token
+				var payload = JSONWebToken.DecodeAsJson(authenticateToken, shareKey);
+
+				// get values
+				var issuedAt = payload.Value<long>("iat");
+				var userID = payload.Get<string>("uid");
+				var sessionID = payload.Get<string>("sid");
+				var signature = payload.Get<string>("sig");
+
+				// verify
+				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 30)
+					throw new TokenExpiredException();
+
+				if (userID == null || string.IsNullOrWhiteSpace(sessionID))
+					throw new InvalidTokenException("Identity is invalid");
+
+				sessionID = sessionID.HexToBytes().Decrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex();
+				if (string.IsNullOrWhiteSpace(signature) || !signature.Equals($"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey)))
+					throw new InvalidTokenSignatureException();
+
+				// create user identity
+				var userIdentity = new UserIdentity(userID, sessionID);
+
+				// callback
+				onPreCompleted?.Invoke(payload, userIdentity);
+
+				// return user identity
+				return userIdentity;
+			}
+			catch (InvalidTokenSignatureException)
+			{
+				throw;
+			}
+			catch (TokenExpiredException)
+			{
+				throw;
+			}
+			catch (InvalidTokenException)
+			{
+				throw;
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidTokenException("Invalid authenticate token", ex);
+			}
+		}
+		#endregion
+
 		#region Working with access token
 		/// <summary>
 		/// Gets the access token of an user that associate with a session and return a JSON Web Token
@@ -222,7 +316,7 @@ namespace net.vieapps.Components.Security
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
 				{ "uid", userID },
-				{ "sid", publicKey.Encrypt(sessionID, true) },
+				{ "sid", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
 				{ "tkn", publicKey.Encrypt(token, true) },
 				{ "tkh", hash.ToHex() },
 				{ "sig", ECCsecp256k1.GetSignature(signature) }
@@ -264,29 +358,28 @@ namespace net.vieapps.Components.Security
 				var payload = JSONWebToken.DecodeAsJson(accessToken, ECCsecp256k1.GetPublicKey(publicKey).ToHex());
 
 				// get values
-				var token = payload.ToExpandoObject();
-				var userID = token.Get<string>("uid");
-				var sessionID = token.Get<string>("sid");
+				var userID = payload.Get<string>("uid");
+				var sessionID = payload.Get<string>("sid");
 
 				// verify (1st)
 				if (string.IsNullOrWhiteSpace(userID) || string.IsNullOrWhiteSpace(sessionID))
 					throw new InvalidTokenException("Identity is not found");
 				else
-					sessionID = key.Decrypt(sessionID, true);
+					sessionID = key.Decrypt(sessionID.HexToBytes()).ToHex();
 
 				// verify (2nd)
-				var hash = token.Get<string>("tkh").HexToBytes();
-				var signature = ECCsecp256k1.GetSignature(token.Get<string>("sig"));
+				var hash = payload.Get<string>("tkh").HexToBytes();
+				var signature = ECCsecp256k1.GetSignature(payload.Get<string>("sig"));
 				if (!publicKey.Verify(hash, signature))
 					throw new InvalidTokenSignatureException();
 
 				// decrypt & verify (3rd)
-				var strToken = key.Decrypt(token.Get<string>("tkn"), true);
-				if (!hash.SequenceEqual(strToken.GetHash(hashAlgorithm)))
+				accessToken = key.Decrypt(payload.Get<string>("tkn"), true);
+				if (!hash.SequenceEqual(accessToken.GetHash(hashAlgorithm)))
 					throw new InvalidTokenException("Digest is not matched");
 
 				// verify (4th)
-				token = strToken.ToExpandoObject();
+				var token = accessToken.ToExpandoObject();
 				if (!userID.IsEquals(token.Get<string>("uid")) || !sessionID.IsEquals(token.Get<string>("sid")))
 					throw new InvalidTokenException("Identity is not matched");
 
@@ -312,101 +405,6 @@ namespace net.vieapps.Components.Security
 			catch (Exception ex)
 			{
 				throw new InvalidTokenException("Invalid access token", ex);
-			}
-		}
-		#endregion
-
-		#region Working with authenticate token
-		/// <summary>
-		/// Gets the authenticate token of an user that associate with a session and return a JSON Web Token
-		/// </summary>
-		/// <param name="userID">The string that presents identity of an user</param>
-		/// <param name="sessionID">The string that presents identity of working session that associated with user</param>
-		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
-		/// <param name="signKey">The passphrase that used to sign the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
-		/// <returns>A JSON Web Token that presents the authenticate token</returns>
-		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
-		{
-			var payload = new JObject
-			{
-				{ "iat", DateTime.Now.ToUnixTimestamp() },
-				{ "uid", userID },
-				{ "sid", sessionID.Encrypt(encryptionKey, true) },
-				{ "sig", $"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey) }
-			};
-			onPreCompleted?.Invoke(payload);
-			return JSONWebToken.Encode(payload, signKey);
-		}
-
-		/// <summary>
-		/// Gets the authenticate token of an user and return a JSON Web Token
-		/// </summary>
-		/// <param name="user">The identity of an user</param>
-		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
-		/// <param name="signKey">The passphrase that used to sign the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
-		/// <returns>A JSON Web Token that presents the authenticate token</returns>
-		public static string GetAuthenticateToken(this UserIdentity user, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
-			=> UserIdentityExtentions.GetAuthenticateToken(user.ID, user.SessionID, encryptionKey, signKey, onPreCompleted);
-
-		/// <summary>
-		/// Parses the given authenticate token and return an <see cref="UserIdentity">UserIdentity</see> object
-		/// </summary>
-		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
-		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
-		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
-		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the authenticate token</returns>
-		public static UserIdentity ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string shareKey, Action<JObject, UserIdentity> onPreCompleted = null)
-		{
-			try
-			{
-				// decode JSON Web Token
-				var payload = JSONWebToken.DecodeAsJson(authenticateToken, shareKey);
-
-				// get values
-				var token = payload.ToExpandoObject();
-				var issuedAt = token.Get<long>("iat");
-				var userID = token.Get<string>("uid");
-				var sessionID = token.Get<string>("sid");
-				var signature = token.Get<string>("sig");
-
-				// verify
-				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 30)
-					throw new TokenExpiredException();
-
-				if (userID == null || string.IsNullOrWhiteSpace(sessionID))
-					throw new InvalidTokenException("Identity is invalid");
-
-				sessionID = sessionID.Decrypt(encryptionKey, true);
-				if (string.IsNullOrWhiteSpace(signature) || !signature.Equals($"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey)))
-					throw new InvalidTokenSignatureException();
-
-				// create user identity
-				var userIdentity = new UserIdentity(userID, sessionID);
-
-				// callback
-				onPreCompleted?.Invoke(payload, userIdentity);
-
-				// return user identity
-				return userIdentity;
-			}
-			catch (InvalidTokenSignatureException)
-			{
-				throw;
-			}
-			catch (TokenExpiredException)
-			{
-				throw;
-			}
-			catch (InvalidTokenException)
-			{
-				throw;
-			}
-			catch (Exception ex)
-			{
-				throw new InvalidTokenException("Invalid authenticate token", ex);
 			}
 		}
 		#endregion

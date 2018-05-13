@@ -55,7 +55,7 @@ namespace net.vieapps.Components.Security
 			if (parts.Length != 3)
 				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
 
-			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, ((parts[0].FromBase64Url().ToJson()["alg"] as JValue)?.Value as string ?? "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
+			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, (parts[0].FromBase64Url().ToExpandoObject().Get<string>("alg") ?? "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
 				throw new InvalidTokenSignatureException();
 
 			return parts[1].FromBase64Url();
