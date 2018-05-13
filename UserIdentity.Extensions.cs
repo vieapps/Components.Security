@@ -244,10 +244,12 @@ namespace net.vieapps.Components.Security
 				var payload = JSONWebToken.DecodeAsJson(authenticateToken, shareKey);
 
 				// get values
-				var issuedAt = payload.Value<long>("iat");
-				var userID = payload.Get<string>("uid");
-				var sessionID = payload.Get<string>("sid");
-				var signature = payload.Get<string>("sig");
+				var token = payload.ToExpandoObject();
+
+				var issuedAt = token.Get<long>("iat");
+				var userID = token.Get<string>("uid");
+				var sessionID = token.Get<string>("sid");
+				var signature = token.Get<string>("sig");
 
 				// verify
 				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 30)
@@ -358,8 +360,10 @@ namespace net.vieapps.Components.Security
 				var payload = JSONWebToken.DecodeAsJson(accessToken, ECCsecp256k1.GetPublicKey(publicKey).ToHex());
 
 				// get values
-				var userID = payload.Get<string>("uid");
-				var sessionID = payload.Get<string>("sid");
+				var token = payload.ToExpandoObject();
+
+				var userID = token.Get<string>("uid");
+				var sessionID = token.Get<string>("sid");
 
 				// verify (1st)
 				if (string.IsNullOrWhiteSpace(userID) || string.IsNullOrWhiteSpace(sessionID))
@@ -368,18 +372,18 @@ namespace net.vieapps.Components.Security
 					sessionID = key.Decrypt(sessionID.HexToBytes()).ToHex();
 
 				// verify (2nd)
-				var hash = payload.Get<string>("tkh").HexToBytes();
-				var signature = ECCsecp256k1.GetSignature(payload.Get<string>("sig"));
+				var hash = token.Get<string>("tkh").HexToBytes();
+				var signature = ECCsecp256k1.GetSignature(token.Get<string>("sig"));
 				if (!publicKey.Verify(hash, signature))
 					throw new InvalidTokenSignatureException();
 
 				// decrypt & verify (3rd)
-				accessToken = key.Decrypt(payload.Get<string>("tkn"), true);
+				accessToken = key.Decrypt(token.Get<string>("tkn"), true);
 				if (!hash.SequenceEqual(accessToken.GetHash(hashAlgorithm)))
 					throw new InvalidTokenException("Digest is not matched");
 
 				// verify (4th)
-				var token = accessToken.ToExpandoObject();
+				token = accessToken.ToExpandoObject();
 				if (!userID.IsEquals(token.Get<string>("uid")) || !sessionID.IsEquals(token.Get<string>("sid")))
 					throw new InvalidTokenException("Identity is not matched");
 

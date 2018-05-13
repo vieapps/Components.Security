@@ -33,13 +33,6 @@ namespace net.vieapps.Components.Security
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="userID">The identity of user</param>
-		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string authenticationType = null) : this(userID, null, authenticationType) { }
-
-		/// <summary>
-		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
-		/// </summary>
-		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
 		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType) { }
