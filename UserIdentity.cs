@@ -32,29 +32,29 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
-		/// <param name="id">The identity of user</param>
+		/// <param name="userID">The identity of user</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string authenticationType = null) : this(id, null, authenticationType) { }
+		public UserIdentity(string userID, string authenticationType = null) : this(userID, null, authenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
-		/// <param name="id">The identity of user</param>
+		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string sessionID, string authenticationType = null) : this(id, sessionID, null, null, authenticationType) { }
+		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
-		/// <param name="id">The identity of user</param>
+		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="roles">The working roles</param>
 		/// <param name="privileges">The working privileges</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string id, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null) : base(authenticationType ?? "API")
+		public UserIdentity(string userID, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null) : base(authenticationType ?? "API")
 		{
-			this.ID = id;
+			this.ID = userID;
 			this.SessionID = sessionID;
 			this.AuthenticationType = authenticationType ?? "API";
 			this.Roles = roles ?? new List<string>();
@@ -624,20 +624,14 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="privileges"></param>
 		/// <returns></returns>
-		public static Privileges Normalize(Privileges privileges)
-		{
-			return privileges?.Normalize();
-		}
+		public static Privileges Normalize(Privileges privileges) => privileges?.Normalize();
 
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
 		/// </summary>
 		/// <param name="privileges"></param>
 		/// <returns></returns>
-		public static Privileges NormalizePrivileges(Privileges privileges)
-		{
-			return privileges?.Normalize();
-		}
+		public static Privileges NormalizePrivileges(Privileges privileges) => privileges?.Normalize();
 
 		/// <summary>
 		/// Combines the original permissions of a business entity with parent permissions
@@ -645,10 +639,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="originalPrivileges"></param>
 		/// <param name="parentPrivileges"></param>
 		/// <returns></returns>
-		public static Privileges Combine(Privileges originalPrivileges, Privileges parentPrivileges)
-		{
-			return originalPrivileges?.Combine(parentPrivileges);
-		}
+		public static Privileges Combine(Privileges originalPrivileges, Privileges parentPrivileges) => originalPrivileges?.Combine(parentPrivileges);
 
 		/// <summary>
 		/// Combines the original permissions of a business entity with parent permissions
@@ -656,106 +647,81 @@ namespace net.vieapps.Components.Security
 		/// <param name="originalPrivileges"></param>
 		/// <param name="parentPrivileges"></param>
 		/// <returns></returns>
-		public static Privileges CombinePrivileges(Privileges originalPrivileges, Privileges parentPrivileges)
-		{
-			return originalPrivileges?.Combine(parentPrivileges);
-		}
+		public static Privileges CombinePrivileges(Privileges originalPrivileges, Privileges parentPrivileges) => originalPrivileges?.Combine(parentPrivileges);
 		#endregion
 
 		#region Helper: working with access token
 		/// <summary>
-		/// Gets the access token
+		/// Gets the access token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
 		/// <param name="userID">The string that presents the identity of the user</param>
 		/// <param name="sessionID">The string that presents the identity of the associated session</param>
 		/// <param name="roles">The collection that presents the roles that the user was belong to</param>
 		/// <param name="privileges">The collection that presents the access privileges that the user was got</param>
-		/// <param name="eccKey">The key for encrypting and signing using ECCsecp256k1</param>
-		/// <returns>The string that presennts the encrypted access token</returns>
-		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger eccKey)
-		{
-			return UserIdentityExtentions.GetAccessToken(userID, sessionID, roles, privileges, eccKey);
-		}
+		/// <param name="key">The key used to encrypt and sign</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
+		/// <returns>A JSON Web Token that presents the access token</returns>
+		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+			=> UserIdentityExtentions.GetAccessToken(userID, sessionID, roles, privileges, key, onPreCompleted, hashAlgorithm);
 
 		/// <summary>
-		/// Gets the access token
+		/// Gets the access token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
 		/// <param name="userIdentity">The user identity</param>
-		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <returns>The string that presennts the encrypted access token</returns>
-		public static string GetAccessToken(UserIdentity userIdentity, BigInteger eccKey)
-		{
-			return userIdentity.GetAccessToken(eccKey);
-		}
+		/// <param name="key">The key used to encrypt and sign</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
+		/// <returns>A JSON Web Token that presents the access token</returns>
+		public static string GetAccessToken(UserIdentity userIdentity, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+			=> userIdentity.GetAccessToken(key, onPreCompleted, hashAlgorithm);
 
 		/// <summary>
-		/// Parses the access token to get <see cref="UserIdentity">UserIdentity</see> object
+		/// Parses the given access token and return an <see cref="UserIdentity">UserIdentity</see> object
 		/// </summary>
-		/// <param name="accessToken">The string that presennts the encrypted access token</param>
-		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
+		/// <param name="accessToken">The JSON Web Token that presents the access token</param>
+		/// <param name="key">The key used to decrypt and verify</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
-		public static UserIdentity ParseAccessToken(string accessToken, BigInteger eccKey)
-		{
-			return accessToken.ParseAccessToken(eccKey);
-		}
+		public static UserIdentity ParseAccessToken(string accessToken, BigInteger key, Action<ExpandoObject, UserIdentity> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+			=> accessToken.ParseAccessToken(key, onPreCompleted, hashAlgorithm);
 		#endregion
 
-		#region Helper: working with JSON Web Token
+		#region Helper: working with authenticate token
 		/// <summary>
-		/// Gets the JSON Web Token
+		/// Gets the authenticate token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
 		/// <param name="userID">The string that presents identity of an user</param>
 		/// <param name="sessionID">The string that presents identity of working session that associated with user</param>
-		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for encrypting data using AES</param>
-		/// <param name="shareKey">The passphrase that presents shared key for signing the token</param>
-		/// <param name="onPreCompleted">The action to run before the parsing process is compeleted</param>
-		/// <returns>The string that presents a JSON Web Token</returns>
-		public static string GetJSONWebToken(string userID, string sessionID, string encryptionKey, string shareKey, Action<JObject> onPreCompleted = null)
-		{
-			return UserIdentityExtentions.GetJSONWebToken(userID, sessionID, encryptionKey, shareKey, onPreCompleted);
-		}
+		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
+		/// <param name="signKey">The passphrase that used to sign the token</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>A JSON Web Token that presents the authenticate token</returns>
+		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
+			=> UserIdentityExtentions.GetAuthenticateToken(userID, sessionID, encryptionKey, signKey, onPreCompleted);
 
 		/// <summary>
-		/// Parses the JSON Web Token (return a tuple value with first element is user identity, second is session identity)
+		/// Gets the authenticate token of an user and return a JSON Web Token
 		/// </summary>
-		/// <param name="jwtoken">The string that presents a JSON Web Token</param>
+		/// <param name="user">The identity of an user</param>
+		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
+		/// <param name="signKey">The passphrase that used to sign the token</param>
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>A JSON Web Token that presents the authenticate token</returns>
+		public static string GetAuthenticateToken(UserIdentity user, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
+			=> user.GetAuthenticateToken(encryptionKey, signKey, onPreCompleted);
+
+		/// <summary>
+		/// Parses the given authenticate token and return an <see cref="UserIdentity">UserIdentity</see> object
+		/// </summary>
+		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
 		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
-		/// <param name="onPreCompleted">The action to run before the parsing process is compeleted</param>
-		/// <returns>The tuple with first element is user identity, second is session identity</returns>
-		public static Tuple<string, string> ParseJSONWebToken(string jwtoken, string encryptionKey, string shareKey, Action<ExpandoObject> onPreCompleted = null)
-		{
-			return jwtoken.ParseJSONWebToken(encryptionKey, shareKey, onPreCompleted);
-		}
-		#endregion
-
-		#region Helper: working with passport token
-		/// <summary>
-		/// Gets the passport token
-		/// </summary>
-		/// <param name="userIdentity">The user identity</param>
-		/// <param name="deviceID">The string that presents identity of working device that associated with user</param>
-		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for encrypting data using AES</param>
-		/// <param name="shareKey">The passphrase that presents shared key for signing the token</param>
-		/// <param name="eccKey">The key for encrypting and signing using ECCsecp256k1</param>
-		/// <returns>The string that presents a JSON Web Token</returns>
-		public static string GetPassportToken(UserIdentity userIdentity, string deviceID, string encryptionKey, string shareKey, BigInteger eccKey)
-		{
-			return userIdentity.GetPassportToken(deviceID, encryptionKey, shareKey, eccKey);
-		}
-
-		/// <summary>
-		/// Parses the passport token (return a tuple value with first element is user identity, second element is is device identity)
-		/// </summary>
-		/// <param name="jwtoken">The string that presents a JSON Web Token</param>
-		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
-		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
-		/// <param name="eccKey">The key for verifying and decrypting using ECCsecp256k1</param>
-		/// <returns>A tuple value with first element is user identity, second element is session identity, third element is access token, and last element is device identity</returns>
-		public static Tuple<UserIdentity, string> ParsePassportToken(string jwtoken, string encryptionKey, string shareKey, BigInteger eccKey)
-		{
-			return jwtoken.ParsePassportToken(encryptionKey, shareKey, eccKey);
-		}
+		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the authenticate token</returns>
+		public static UserIdentity ParseAuthenticateToken(string authenticateToken, string encryptionKey, string shareKey, Action<ExpandoObject, UserIdentity> onPreCompleted = null)
+			=> authenticateToken.ParseAuthenticateToken(encryptionKey, shareKey, onPreCompleted);
 		#endregion
 
 	}
