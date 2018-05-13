@@ -255,15 +255,16 @@ namespace net.vieapps.Components.Security
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
-		public static UserIdentity ParseAccessToken(this string accessToken, BigInteger key, Action<ExpandoObject, UserIdentity> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static UserIdentity ParseAccessToken(this string accessToken, BigInteger key, Action<JObject, UserIdentity> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			try
 			{
 				// decode JSON Web Token
 				var publicKey = key.GenerateECCPublicKey();
-				var token = JSONWebToken.DecodeAsJson(accessToken, ECCsecp256k1.GetPublicKey(publicKey).ToHex()).ToExpandoObject();
+				var payload = JSONWebToken.DecodeAsJson(accessToken, ECCsecp256k1.GetPublicKey(publicKey).ToHex());
 
 				// get values
+				var token = payload.ToExpandoObject();
 				var userID = token.Get<string>("uid");
 				var sessionID = token.Get<string>("sid");
 
@@ -295,7 +296,7 @@ namespace net.vieapps.Components.Security
 				var userIdentity = new UserIdentity(userID, sessionID, roles, privileges);
 
 				// callback
-				onPreCompleted?.Invoke(token, userIdentity);
+				onPreCompleted?.Invoke(payload, userIdentity);
 
 				// return user identity
 				return userIdentity;
@@ -357,14 +358,15 @@ namespace net.vieapps.Components.Security
 		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the authenticate token</returns>
-		public static UserIdentity ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string shareKey, Action<ExpandoObject, UserIdentity> onPreCompleted = null)
+		public static UserIdentity ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string shareKey, Action<JObject, UserIdentity> onPreCompleted = null)
 		{
 			try
 			{
 				// decode JSON Web Token
-				var token = JSONWebToken.Decode(authenticateToken, shareKey).ToExpandoObject();
+				var payload = JSONWebToken.DecodeAsJson(authenticateToken, shareKey);
 
 				// get values
+				var token = payload.ToExpandoObject();
 				var issuedAt = token.Get<long>("iat");
 				var userID = token.Get<string>("uid");
 				var sessionID = token.Get<string>("sid");
@@ -385,7 +387,7 @@ namespace net.vieapps.Components.Security
 				var userIdentity = new UserIdentity(userID, sessionID);
 
 				// callback
-				onPreCompleted?.Invoke(token, userIdentity);
+				onPreCompleted?.Invoke(payload, userIdentity);
 
 				// return user identity
 				return userIdentity;

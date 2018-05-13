@@ -16,35 +16,35 @@ namespace net.vieapps.Components.Security
 	public static class JSONWebToken
 	{
 		/// <summary>
-		/// Creates a JSON Web Token
+		/// Encodes a JSON Web Token
 		/// </summary>
 		/// <param name="payload">An arbitrary payload</param>
-		/// <param name="key">The key used to sign the token</param>
-		/// <param name="hashAlgorithm">The hash algorithm to use (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512) - default is SHA 256</param>
+		/// <param name="key">The key used to sign</param>
+		/// <param name="hashAlgorithm">The hash algorithm used to sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <param name="headers">An arbitrary set of extra headers, will be augmented with the standard "typ" and "alg" headers</param>
-		/// <returns>A JSON Web Token in Base64Url string</returns>
-		public static string Encode(JObject payload, string key, string hashAlgorithm = "SHA256", IDictionary<string, string> headers = null)
+		/// <returns>The string that presents a JSON Web Token</returns>
+		public static string Encode(JObject payload, string key, string hashAlgorithm = null, IDictionary<string, string> headers = null)
 		{
 			var segments = new List<string>
 			{
 				new Dictionary<string, string>(headers ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase)
 				{
 					{ "typ", "JWT" },
-					{ "alg", hashAlgorithm.Replace(StringComparison.OrdinalIgnoreCase, "SHA", "hs") }
+					{ "alg", (hashAlgorithm ?? "SHA256").Replace(StringComparison.OrdinalIgnoreCase, "sha", "hs") }
 				}.ToJson().ToString(Formatting.None).ToBase64Url(),
 				(payload ?? new JObject()).ToString(Formatting.None).ToBase64Url()
 			};
-			segments.Add(string.Join(".", segments).GetHMAC(key, hashAlgorithm, false).ToBase64Url(true));
+			segments.Add(string.Join(".", segments).GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm ?? "SHA256", false).ToBase64Url(true));
 			return string.Join(".", segments);
 		}
 
 		/// <summary>
-		/// Decodes a given a JSON Web Token and return the JSON payload string
+		/// Decodes a given JSON Web Token and return the string that presents the JSON payload 
 		/// </summary>
-		/// <param name="token">The JSON Web Token (encoded with Base64Url)</param>
+		/// <param name="token">The JSON Web Token</param>
 		/// <param name="key">The key that were used to sign the JSON Web Token</param>
-		/// <param name="verify">Whether to verify the signature (default is true)</param>
-		/// <returns>A string containing the JSON payload</returns>
+		/// <param name="verify">Whether to verify the signature</param>
+		/// <returns>A string that representing the payload</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
 		public static string Decode(string token, string key, bool verify = true)
 		{
@@ -55,29 +55,20 @@ namespace net.vieapps.Components.Security
 			if (parts.Length != 3)
 				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
 
-			if (verify)
-			{
-				var header = JObject.Parse(parts[0].FromBase64Url());
-				var hashAlgorithm = ((header["alg"] as JValue).Value as string ?? "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "SHA");
-				var signature = (parts[0] + "." + parts[1]).GetHMAC(key, hashAlgorithm, false).ToBase64Url(true);
-				if (!signature.Equals(parts[2]))
-					throw new InvalidTokenSignatureException($"Invalid signature, expected \"{signature}\" but got \"{parts[2]}\"");
-			}
+			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, ((parts[0].FromBase64Url().ToJson()["alg"] as JValue)?.Value as string ?? "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
+				throw new InvalidTokenSignatureException();
 
 			return parts[1].FromBase64Url();
 		}
 
 		/// <summary>
-		/// Decodes a given a JSON Web Token and return the JSON payload string
+		/// Decodes a given JSON Web Token and return the JSON payload
 		/// </summary>
-		/// <param name="token">The JSON Web Token (encoded with Base64Url)</param>
+		/// <param name="token">The JSON Web Token</param>
 		/// <param name="key">The key that were used to sign the JSON Web Token</param>
-		/// <param name="verify">Whether to verify the signature (default is true)</param>
-		/// <returns>An <see cref="JObject">JObject</see> object representing the payload</returns>
+		/// <param name="verify">Whether to verify the signature</param>
+		/// <returns>An <see cref="JObject">JObject</see> object that representing the payload</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
-		public static JObject DecodeAsJson(string token, string key, bool verify = true)
-		{
-			return JObject.Parse(JSONWebToken.Decode(token, key, verify));
-		}
+		public static JObject DecodeAsJson(string token, string key, bool verify = true) => JObject.Parse(JSONWebToken.Decode(token, key, verify));
 	}
 }

@@ -87,7 +87,7 @@ namespace net.vieapps.Components.Security
 			this.SessionID = this.FindFirst(ClaimTypes.Sid)?.Value;
 			this.AuthenticationType = this.FindFirst(ClaimTypes.AuthenticationMethod)?.Value;
 
-			this.SetAuthorizationInfo(claims?.FirstOrDefault(claim => claim.Type.Equals(ClaimTypes.UserData))?.Value);
+			this.SetUserData(claims?.FirstOrDefault(claim => claim.Type.Equals(ClaimTypes.UserData))?.Value);
 			this.BuildClaimsOfRolesAndPrivileges();
 		}
 
@@ -129,67 +129,33 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public override bool IsAuthenticated
-		{
-			get
-			{
-				return !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
-			}
-		}
+		public override bool IsAuthenticated => !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
 
 		static string _SystemAccountID = null;
 
 		/// <summary>
 		/// Gets the identity of the system account
 		/// </summary>
-		internal static string SystemAccountID
-		{
-			get
-			{
-				if (string.IsNullOrWhiteSpace(UserIdentity._SystemAccountID))
-					UserIdentity._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account");
-				return UserIdentity._SystemAccountID;
-			}
-		}
+		internal static string SystemAccountID => UserIdentity._SystemAccountID ?? (UserIdentity._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account"));
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsSystemAccount
-		{
-			get
-			{
-				return this.IsAuthenticated
-					? this.ID.IsEquals(UserIdentity.SystemAccountID)
-					: false;
-			}
-		}
+		public bool IsSystemAccount => this.IsAuthenticated ? this.ID.IsEquals(UserIdentity.SystemAccountID) : false;
 
 		/// <summary>
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsSystemAdministrator
-		{
-			get
-			{
-				return this.IsSystemAccount || (this.IsAuthenticated && UserIdentity.SystemAdministrators.Contains(this.ID.ToLower()));
-			}
-		}
+		public bool IsSystemAdministrator => this.IsSystemAccount || (this.IsAuthenticated && UserIdentity.SystemAdministrators.Contains(this.ID.ToLower()));
 
 		static HashSet<string> _SystemAdministrators = null;
 
 		/// <summary>
 		/// Gets the collection of the system administrators
 		/// </summary>
-		public static HashSet<string> SystemAdministrators
-		{
-			get
-			{
-				return UserIdentity._SystemAdministrators ?? (UserIdentity._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
-			}
-		}
+		public static HashSet<string> SystemAdministrators => UserIdentity._SystemAdministrators ?? (UserIdentity._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
 		#endregion
 
 		#region Authorization
@@ -198,10 +164,7 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="role"></param>
 		/// <returns></returns>
-		public bool IsInRole(string role)
-		{
-			return !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
-		}
+		public bool IsInRole(string role) => !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
 
 		/// <summary>
 		/// Determines an user can manage (means the user can act like an administrator)
@@ -546,7 +509,7 @@ namespace net.vieapps.Components.Security
 			var claim = this.FindFirst(ClaimTypes.UserData);
 			if (claim != null)
 				this.RemoveClaim(claim);
-			this.AddClaim(new Claim(ClaimTypes.UserData, this.GetAuthorizationInfo()));
+			this.AddClaim(new Claim(ClaimTypes.UserData, this.GetUserData()));
 		}
 
 		/// <summary>
@@ -560,65 +523,94 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
-		#region Serialization
-		void SetAuthorizationInfo(string data)
-		{
-			if (!string.IsNullOrWhiteSpace(data))
-				try
-				{
-					var info = data.ToExpandoObject();
-					this.Roles = info.Get<List<string>>("Roles");
-					this.Privileges = info.Get<List<Privilege>>("Privileges");
-				}
-				catch { }
-		}
+		#region Get & Set user data
+		/// <summary>
+		/// Gets or sets the action to fire when system calls to get user data
+		/// </summary>
+		public Action<JObject, UserIdentity> OnGetUserData { get; set; }
 
-		string GetAuthorizationInfo()
+		string GetUserData()
 		{
-			return new JObject
+			var userData = new JObject
 			{
-				{ "Roles", this.Roles.ToJson() },
-				{ "Privileges", this.Privileges.ToJson() }
-			}.ToString(Formatting.None);
+				{ "Roles", this.Roles.ToJArray() },
+				{ "Privileges", this.Privileges.ToJArray() }
+			};
+			this.OnGetUserData?.Invoke(userData, this);
+			return userData.ToString(Formatting.None);
 		}
 
-		public new void GetObjectData(SerializationInfo serializationInfo, StreamingContext context)
-		{
-			serializationInfo.AddValue("ID", this.ID);
-			serializationInfo.AddValue("SessionID", this.SessionID);
-			serializationInfo.AddValue("AuthorizationInfo", this.GetAuthorizationInfo());
-			serializationInfo.AddValue("Label", this.Label);
-			serializationInfo.AddValue("AuthenticationType", this.AuthenticationType);
-		}
+		/// <summary>
+		/// Gets or sets the action to fire when system calls to set user data
+		/// </summary>
+		public Action<JObject, UserIdentity> OnSetUserData { get; set; }
 
-		public UserIdentity(SerializationInfo serializationInfo, StreamingContext context)
+		void SetUserData(string data)
 		{
-			this.ID = (string)serializationInfo.GetValue("ID", typeof(string));
-			this.SessionID = (string)serializationInfo.GetValue("SessionID", typeof(string));
-			this.SetAuthorizationInfo((string)serializationInfo.GetValue("AuthorizationInfo", typeof(string)));
-			this.Label = (string)serializationInfo.GetValue("Label", typeof(string));
-			this.AuthenticationType = (string)serializationInfo.GetValue("AuthenticationType", typeof(string));
-			this.BuildClaims();
-			this.BuildClaimsOfRolesAndPrivileges();
+			try
+			{
+				var json = data.ToJson();
+				var info = json.ToExpandoObject();
+				this.Roles = info.Get<List<string>>("Roles");
+				this.Privileges = info.Get<List<Privilege>>("Privileges");
+				this.OnSetUserData?.Invoke(json as JObject, this);
+			}
+			catch { }
 		}
-		#endregion
 
 		/// <summary>
 		/// Gets the JSON
 		/// </summary>
 		/// <returns></returns>
-		public JToken ToJson()
+		public JToken ToJson(Action<JObject> onPreCompleted = null)
 		{
-			return new JObject
+			var json = new JObject
 			{
 				{ "ID", this.ID },
 				{ "SessionID", this.SessionID },
 				{ "Roles", this.Roles.ToJArray() },
 				{ "Privileges", this.Privileges.ToJArray() }
 			};
+			onPreCompleted?.Invoke(json);
+			return json;
+		}
+		#endregion
+
+		#region Serialization
+		/// <summary>
+		/// Gets or sets the action to fire when system serializes the object (creates serialization information)
+		/// </summary>
+		public Action<SerializationInfo, UserIdentity> OnSerialize { get; set; }
+
+		public new void GetObjectData(SerializationInfo serializationInfo, StreamingContext context)
+		{
+			serializationInfo.AddValue("ID", this.ID);
+			serializationInfo.AddValue("SessionID", this.SessionID);
+			serializationInfo.AddValue("Label", this.Label);
+			serializationInfo.AddValue("AuthenticationType", this.AuthenticationType);
+			serializationInfo.AddValue("UserData", this.GetUserData());
+			this.OnSerialize?.Invoke(serializationInfo, this);
 		}
 
-		#region Helper: normalize & combine privileges
+		/// <summary>
+		/// Gets or sets the action to fire when system deserializes the object (creates new instance from serialization information)
+		/// </summary>
+		public Action<SerializationInfo, UserIdentity> OnDeserialize { get; set; }
+
+		public UserIdentity(SerializationInfo serializationInfo, StreamingContext context)
+		{
+			this.ID = (string)serializationInfo.GetValue("ID", typeof(string));
+			this.SessionID = (string)serializationInfo.GetValue("SessionID", typeof(string));
+			this.Label = (string)serializationInfo.GetValue("Label", typeof(string));
+			this.AuthenticationType = (string)serializationInfo.GetValue("AuthenticationType", typeof(string));
+			this.SetUserData((string)serializationInfo.GetValue("UserData", typeof(string)));
+			this.BuildClaims();
+			this.BuildClaimsOfRolesAndPrivileges();
+			this.OnDeserialize?.Invoke(serializationInfo, this);
+		}
+		#endregion
+
+		#region Static helpers
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
 		/// </summary>
@@ -648,9 +640,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges"></param>
 		/// <returns></returns>
 		public static Privileges CombinePrivileges(Privileges originalPrivileges, Privileges parentPrivileges) => originalPrivileges?.Combine(parentPrivileges);
-		#endregion
 
-		#region Helper: working with access token
 		/// <summary>
 		/// Gets the access token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
@@ -684,11 +674,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the access token</returns>
-		public static UserIdentity ParseAccessToken(string accessToken, BigInteger key, Action<ExpandoObject, UserIdentity> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static UserIdentity ParseAccessToken(string accessToken, BigInteger key, Action<JObject, UserIdentity> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
 			=> accessToken.ParseAccessToken(key, onPreCompleted, hashAlgorithm);
-		#endregion
 
-		#region Helper: working with authenticate token
 		/// <summary>
 		/// Gets the authenticate token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
@@ -720,7 +708,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <returns>The <see cref="UserIdentity">UserIdentity</see> object that presented by the authenticate token</returns>
-		public static UserIdentity ParseAuthenticateToken(string authenticateToken, string encryptionKey, string shareKey, Action<ExpandoObject, UserIdentity> onPreCompleted = null)
+		public static UserIdentity ParseAuthenticateToken(string authenticateToken, string encryptionKey, string shareKey, Action<JObject, UserIdentity> onPreCompleted = null)
 			=> authenticateToken.ParseAuthenticateToken(encryptionKey, shareKey, onPreCompleted);
 		#endregion
 
