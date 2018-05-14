@@ -20,6 +20,12 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the new instance of an user principal from the specified identity
 		/// </summary>
+		/// <param name="user">The identity from which to initialize the new principal</param>
+		public UserPrincipal(IUser user) : this(new UserIdentity(user)) { }
+
+		/// <summary>
+		/// Initializes the new instance of an user principal from the specified identity
+		/// </summary>
 		/// <param name="identity">The identity from which to initialize the new principal</param>
 		public UserPrincipal(UserIdentity identity) : base(identity)
 		{
@@ -133,7 +139,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
 		/// <param name="getActions">The function to prepare the actions of each privilege</param>
 		/// <returns></returns>
-		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<UserIdentity, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
+		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<IUser, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
 			=> this.Identity != null && (this.Identity as UserIdentity).IsAuthorized(serviceName, objectName, objectIdentity, action, privileges, getPrivileges, getActions);
 		#endregion
 
