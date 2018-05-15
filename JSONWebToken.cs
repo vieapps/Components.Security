@@ -21,13 +21,12 @@ namespace net.vieapps.Components.Security
 		/// <param name="payload">An arbitrary payload</param>
 		/// <param name="key">The key used to sign</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
-		/// <param name="headers">An arbitrary set of extra headers, will be augmented with the standard "typ" and "alg" headers</param>
 		/// <returns>The string that presents a JSON Web Token</returns>
-		public static string Encode(JObject payload, string key, string hashAlgorithm = null, IDictionary<string, string> headers = null)
+		public static string Encode(JObject payload, string key, string hashAlgorithm = null)
 		{
 			var segments = new List<string>
 			{
-				new Dictionary<string, string>(headers ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase)
+				new Dictionary<string, string>
 				{
 					{ "typ", "JWT" },
 					{ "alg", (hashAlgorithm ?? "SHA256").Replace(StringComparison.OrdinalIgnoreCase, "sha", "hs") }

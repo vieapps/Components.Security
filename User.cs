@@ -729,9 +729,10 @@ namespace net.vieapps.Components.Security
 			var payload = new JObject
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
-				{ "uid", userID },
+				{ "jti", $"{userID}@{sessionID}".GetHMACBLAKE256(encryptionKey) },
 				{ "sid", sessionID.HexToBytes().Encrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex() },
-				{ "sig", $"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey) }
+				{ "aud", (string.IsNullOrWhiteSpace(userID) ? UtilityService.BlankUUID : userID).GetHMACBLAKE128(signKey) },
+				{ "uid", userID }
 			};
 			onPreCompleted?.Invoke(payload);
 			return JSONWebToken.Encode(payload, signKey);
@@ -742,7 +743,7 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="user">The identity of an user</param>
 		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
-		/// <param name="signKey">The passphrase that used to sign the token</param>
+		/// <param name="signKey">The passphrase that used to sign and verify the token</param>
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <returns>A JSON Web Token that presents the authenticate token</returns>
 		public static string GetAuthenticateToken(this User user, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
@@ -753,34 +754,39 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
-		/// <param name="shareKey">The passphrase that presents shared key for verify the token</param>
+		/// <param name="signKey">The passphrase that used to sign and verify the token</param>
 		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
 		/// <returns>The <see cref="User">UserIdentity</see> object that presented by the authenticate token</returns>
-		public static User ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string shareKey, Action<JObject, User> onPreCompleted = null)
+		public static User ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string signKey, Action<JObject, User> onPreCompleted = null)
 		{
 			try
 			{
 				// decode JSON Web Token
-				var payload = JSONWebToken.DecodeAsJson(authenticateToken, shareKey);
-
-				// get values
+				var payload = JSONWebToken.DecodeAsJson(authenticateToken, signKey);
 				var token = payload.ToExpandoObject();
 
+				// issued at (expired after 60 seconds)
 				var issuedAt = token.Get<long>("iat");
-				var userID = token.Get<string>("uid");
-				var sessionID = token.Get<string>("sid");
-				var signature = token.Get<string>("sig");
-
-				// verify
-				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 30)
+				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 60)
 					throw new TokenExpiredException();
 
-				if (userID == null || string.IsNullOrWhiteSpace(sessionID))
-					throw new InvalidTokenException("Identity is invalid");
+				// identities
+				var tokenID = token.Get<string>("jti");
+				var userID = token.Get<string>("uid");
+				var audienceID = token.Get<string>("aud");
+				var sessionID = token.Get<string>("sid");
+
+				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(sessionID) || string.IsNullOrWhiteSpace(audienceID) || userID == null)
+					throw new InvalidTokenException("Invalid identity");
 
 				sessionID = sessionID.HexToBytes().Decrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex();
-				if (string.IsNullOrWhiteSpace(signature) || !signature.Equals($"{sessionID}@{userID}".GetHMACBLAKE256(encryptionKey)))
-					throw new InvalidTokenSignatureException();
+				if (!tokenID.Equals($"{userID}@{sessionID}".GetHMACBLAKE256(encryptionKey)))
+					throw new InvalidTokenException("Invalid identity");
+
+				if (userID.Equals("") && !audienceID.Equals(UtilityService.BlankUUID.GetHMACBLAKE128(signKey)))
+					throw new InvalidTokenException("Invalid identity");
+				else if (!userID.Equals("") && !audienceID.Equals(userID.GetHMACBLAKE128(signKey)))
+					throw new InvalidTokenException("Invalid identity");
 
 				// create user identity
 				var user = new User(userID, sessionID, null, null);
@@ -791,11 +797,11 @@ namespace net.vieapps.Components.Security
 				// return user identity
 				return user;
 			}
-			catch (InvalidTokenSignatureException)
+			catch (TokenExpiredException)
 			{
 				throw;
 			}
-			catch (TokenExpiredException)
+			catch (InvalidTokenSignatureException)
 			{
 				throw;
 			}
@@ -826,8 +832,8 @@ namespace net.vieapps.Components.Security
 		{
 			var token = new JObject
 			{
+				{ "jti", sessionID },
 				{ "uid", userID },
-				{ "sid", sessionID },
 				{ "rls", (roles ?? new List<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToJArray() },
 				{ "pls", (privileges ?? new List<Privilege>()).ToJArray() }
 			}.ToString(Formatting.None);
@@ -837,10 +843,12 @@ namespace net.vieapps.Components.Security
 			var payload = new JObject
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
+				{ "exp", DateTime.Now.AddDays(90).ToUnixTimestamp() },
+				{ "nbf", DateTime.Now.AddDays(-60).ToUnixTimestamp() },
+				{ "jti", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
 				{ "uid", userID },
-				{ "sid", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
-				{ "tok", publicKey.Encrypt(token, true) },
-				{ "tks", hash.ToHex() },
+				{ "atk", publicKey.Encrypt(token, true) },
+				{ "ath", hash.ToHex() },
 				{ "sig", ECCsecp256k1.GetSignature(signature) }
 			};
 			onPreCompleted?.Invoke(payload);
@@ -878,48 +886,53 @@ namespace net.vieapps.Components.Security
 				// decode JSON Web Token
 				var publicKey = key.GenerateECCPublicKey();
 				var payload = JSONWebToken.DecodeAsJson(accessToken, ECCsecp256k1.GetPublicKey(publicKey).ToHex());
-
-				// get values
 				var token = payload.ToExpandoObject();
 
+				// times
 				var issuedAt = token.Get<long>("iat").FromUnixTimestamp();
-				var userID = token.Get<string>("uid");
-				var sessionID = token.Get<string>("sid");
-
-				// verify
-				if ((DateTime.Now - issuedAt).Days > 60)
+				var expiresAt = token.Get<long>("exp").FromUnixTimestamp();
+				var notBefore = token.Get<long>("nbf").FromUnixTimestamp();
+				if (DateTime.Now > expiresAt || DateTime.Now < notBefore || issuedAt > expiresAt || issuedAt < notBefore)
 					throw new TokenExpiredException();
 
-				if (string.IsNullOrWhiteSpace(userID) || string.IsNullOrWhiteSpace(sessionID))
-					throw new InvalidTokenException("Identity is not found");
+				// identities
+				var tokenID = token.Get<string>("jti");
+				var userID = token.Get<string>("uid");
+				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(userID))
+					throw new InvalidTokenException("Invalid identity");
 				else
-					sessionID = key.Decrypt(sessionID.HexToBytes()).ToHex();
+					tokenID = key.Decrypt(tokenID.HexToBytes()).ToHex();
 
-				var hash = token.Get<string>("tks").HexToBytes();
+				// signature
+				var hash = token.Get<string>("ath").HexToBytes();
 				var signature = ECCsecp256k1.GetSignature(token.Get<string>("sig"));
 				if (!publicKey.Verify(hash, signature))
 					throw new InvalidTokenSignatureException();
 
-				// decrypt & verify
-				accessToken = key.Decrypt(token.Get<string>("tok"), true);
+				accessToken = key.Decrypt(token.Get<string>("atk"), true);
 				if (!hash.SequenceEqual(accessToken.GetHash(hashAlgorithm)))
-					throw new InvalidTokenException("Digest is not matched");
+					throw new InvalidTokenException("Not matched");
 
+				// info of access token
 				token = accessToken.ToExpandoObject();
-				if (!userID.IsEquals(token.Get<string>("uid")) || !sessionID.IsEquals(token.Get<string>("sid")))
-					throw new InvalidTokenException("Identity is not matched");
+				if (!userID.IsEquals(token.Get<string>("uid")) || !tokenID.IsEquals(token.Get<string>("jti")))
+					throw new InvalidTokenException("Invalid identity");
 
-				// create user identity
 				var roles = token.Get<List<string>>("rls");
 				var privileges = token.Get<List<Privilege>>("pls");
 
-				var user = new User(userID, sessionID, roles, privileges);
+				// create new user identity
+				var user = new User(userID, tokenID, roles, privileges);
 
 				// callback
 				onPreCompleted?.Invoke(payload, user);
 
 				// return user identity
 				return user;
+			}
+			catch (TokenExpiredException)
+			{
+				throw;
 			}
 			catch (InvalidTokenSignatureException)
 			{
