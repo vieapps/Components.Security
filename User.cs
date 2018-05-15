@@ -191,15 +191,15 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the working privileges (means scopes/working privileges of services/services' objects)
 		/// </summary>
 		public List<Privilege> Privileges { get; set; } = new List<Privilege>();
+		#endregion
 
+		#region Authentication
 		/// <summary>
 		/// Gets the authentication type
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public string AuthenticationType { get; set; } = "API";
-		#endregion
 
-		#region Authentication
 		/// <summary>
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
@@ -839,8 +839,8 @@ namespace net.vieapps.Components.Security
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
 				{ "uid", userID },
 				{ "sid", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
-				{ "tkn", publicKey.Encrypt(token, true) },
-				{ "tkh", hash.ToHex() },
+				{ "tok", publicKey.Encrypt(token, true) },
+				{ "tks", hash.ToHex() },
 				{ "sig", ECCsecp256k1.GetSignature(signature) }
 			};
 			onPreCompleted?.Invoke(payload);
@@ -882,27 +882,29 @@ namespace net.vieapps.Components.Security
 				// get values
 				var token = payload.ToExpandoObject();
 
+				var issuedAt = token.Get<long>("iat").FromUnixTimestamp();
 				var userID = token.Get<string>("uid");
 				var sessionID = token.Get<string>("sid");
 
-				// verify (1st)
+				// verify
+				if ((DateTime.Now - issuedAt).Days > 60)
+					throw new TokenExpiredException();
+
 				if (string.IsNullOrWhiteSpace(userID) || string.IsNullOrWhiteSpace(sessionID))
 					throw new InvalidTokenException("Identity is not found");
 				else
 					sessionID = key.Decrypt(sessionID.HexToBytes()).ToHex();
 
-				// verify (2nd)
-				var hash = token.Get<string>("tkh").HexToBytes();
+				var hash = token.Get<string>("tks").HexToBytes();
 				var signature = ECCsecp256k1.GetSignature(token.Get<string>("sig"));
 				if (!publicKey.Verify(hash, signature))
 					throw new InvalidTokenSignatureException();
 
-				// decrypt & verify (3rd)
-				accessToken = key.Decrypt(token.Get<string>("tkn"), true);
+				// decrypt & verify
+				accessToken = key.Decrypt(token.Get<string>("tok"), true);
 				if (!hash.SequenceEqual(accessToken.GetHash(hashAlgorithm)))
 					throw new InvalidTokenException("Digest is not matched");
 
-				// verify (4th)
 				token = accessToken.ToExpandoObject();
 				if (!userID.IsEquals(token.Get<string>("uid")) || !sessionID.IsEquals(token.Get<string>("sid")))
 					throw new InvalidTokenException("Identity is not matched");
