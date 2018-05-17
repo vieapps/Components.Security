@@ -4,15 +4,15 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
-		<AssemblyTitle>VIEApps NGX Security Base</AssemblyTitle>
-		<AssemblyVersion>10.2.1.1805</AssemblyVersion>
-		<FileVersion>10.2.1.1805</FileVersion>
-		<InformationalVersion>v10.2.netstandard-2+rev:2018.06.01</InformationalVersion>
+		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
+		<AssemblyVersion>10.2.2.1806</AssemblyVersion>
+		<FileVersion>10.2.2.1806</FileVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2018.05.17</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.2.1.1805</Version>
+		<Version>10.2.2.1806</Version>
 		<SignAssembly>false</SignAssembly>
 		<DelaySign>false</DelaySign>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
@@ -21,7 +21,7 @@
 		<Authors>VIEApps.net</Authors>
 		<Copyright>© 2018 VIEApps.net</Copyright>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components to avoid potential bugs</PackageReleaseNotes>
+		<PackageReleaseNotes>Changes: add back User, let UserIdentity be an implementation of IUser, and allow JWT uses more hash algorithms</PackageReleaseNotes>
 		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 	</PropertyGroup>
@@ -45,7 +45,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.1.1805" />
+	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.2.1806" />
 	</ItemGroup>
 
 </Project>

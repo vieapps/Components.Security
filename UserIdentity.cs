@@ -4,13 +4,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Security.Claims;
-using System.Xml.Serialization;
-using System.Numerics;
-using System.Dynamic;
-using System.Runtime.Serialization;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 using net.vieapps.Components.Utility;
@@ -26,10 +21,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with the specified authentication type
 		/// </summary>
-		public UserIdentity() : base()
-		{
-			this.SetUser();
-		}
+		public UserIdentity() : base() => this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
@@ -37,10 +29,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType)
-		{
-			this.SetUser();
-		}
+		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType) => this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
@@ -66,19 +55,13 @@ namespace net.vieapps.Components.Security
 		/// Initializes a new instance of the UserIdentity class with an associated principal
 		/// </summary>
 		/// <param name="principal">The user principal</param>
-		public UserIdentity(ClaimsPrincipal principal) : this(principal?.Claims)
-		{
-			this.SetUser();
-		}
+		public UserIdentity(ClaimsPrincipal principal) : this(principal?.Claims) => this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with an associated identity
 		/// </summary>
 		/// <param name="identity">The user identity</param>
-		public UserIdentity(ClaimsIdentity identity) : this(identity?.Claims)
-		{
-			this.SetUser();
-		}
+		public UserIdentity(ClaimsIdentity identity) : this(identity?.Claims) => this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with preset claims
@@ -146,13 +129,11 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the authentication type
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public override string AuthenticationType { get; }
 
 		/// <summary>
 		/// Gets or name (identity) of user
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public override string Name => this.ID;
 		#endregion
 
@@ -225,27 +206,21 @@ namespace net.vieapps.Components.Security
 		#region Authentication & Authorization
 		internal User User { get; set; }
 
-		void SetUser()
-		{
-			this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
-		}
+		void SetUser() => this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
 
 		/// <summary>
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public override bool IsAuthenticated => this.User.IsAuthenticated;
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public bool IsSystemAccount => this.User.IsSystemAccount;
 
 		/// <summary>
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public bool IsSystemAdministrator => this.User.IsSystemAdministrator;
 
 		/// <summary>
