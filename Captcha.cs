@@ -97,7 +97,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="salt">The string to use as salt</param>
 		/// <returns>The encrypted string that contains code of captcha</returns>
 		public static string GenerateCode(string salt = null)
-			=> (DateTime.Now.ToUnixTimestamp().ToString() + (string.IsNullOrWhiteSpace(salt) ? "" : "-" + salt) + "-" + CaptchaService.GenerateRandomCode()).Encrypt(CaptchaService.EncryptionKey, true);
+			=> $"{DateTime.Now.ToUnixTimestamp()}-{salt ?? UtilityService.NewUUID.Left(13)}-{CaptchaService.GenerateRandomCode()}".Encrypt(CaptchaService.EncryptionKey, true);
 
 		/// <summary>
 		/// Validates captcha code
@@ -107,18 +107,15 @@ namespace net.vieapps.Components.Security
 		/// <returns>true if valid</returns>
 		public static bool IsCodeValid(string captchaCode, string inputCode)
 		{
-			if (string.IsNullOrWhiteSpace(captchaCode) || string.IsNullOrWhiteSpace(inputCode))
-				return false;
-
 			try
 			{
-				var codes = captchaCode.Decrypt(CaptchaService.EncryptionKey, true).ToArray('-');
-
-				var datetime = codes.First().CastAs<long>().FromUnixTimestamp();
-				if ((DateTime.Now - datetime).TotalMinutes > 5.0)
+				if (string.IsNullOrWhiteSpace(captchaCode) || string.IsNullOrWhiteSpace(inputCode))
 					return false;
 
-				return inputCode.Trim().IsEquals(codes.Last());
+				var info = captchaCode.Decrypt(CaptchaService.EncryptionKey, true).ToArray('-');
+				return (DateTime.Now.ToUnixTimestamp() - info.First().CastAs<long>()) / 60 > 5
+					? false
+					: inputCode.Trim().IsEquals(info.Last());
 			}
 			catch
 			{
