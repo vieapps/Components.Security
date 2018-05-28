@@ -6,5 +6,5 @@ The general purpose user security base library for development apps on .NET Stan
 - ... and others
 
 ## NuGet
-- Package ID: VIEApps.Components.Security
-- Details: https://www.nuget.org/packages/VIEApps.Components.Security
+
+[![NuGet](https://img.shields.io/nuget/v/VIEApps.Components.Security.svg)](https://www.nuget.org/packages/VIEApps.Components.Security)

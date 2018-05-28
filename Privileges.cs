@@ -66,8 +66,7 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <returns></returns>
 		public JObject ToJson()
-		{
-			return new JObject()
+			=> new JObject
 			{
 				{ "ServiceName", (this.ServiceName ?? "").Trim().ToLower() },
 				{ "ObjectName", (this.ObjectName ?? "").Trim().ToLower() },
@@ -75,7 +74,6 @@ namespace net.vieapps.Components.Security
 				{ "Role", (this.Role ?? "").Trim() },
 				{ "Actions", (this.Actions ?? new List<string>()).ToJArray() }
 			};
-		}
 	}
 
 	//  --------------------------------------------------------------------------------------------

@@ -27,19 +27,13 @@ namespace net.vieapps.Components.Security
 		/// Initializes the new instance of an user principal from the specified identity
 		/// </summary>
 		/// <param name="identity">The identity from which to initialize the new principal</param>
-		public UserPrincipal(UserIdentity identity) : base(identity)
-		{
-			this.Identity = identity ?? new UserIdentity();
-		}
+		public UserPrincipal(UserIdentity identity) : base(identity) => this.Identity = identity ?? new UserIdentity();
 
 		/// <summary>
 		/// Initializes the new instance of an user principal
 		/// </summary>
 		/// <param name="principal">The principal from which to initialize the new principal</param>
-		public UserPrincipal(ClaimsPrincipal principal) : base(principal)
-		{
-			this.Identity = new UserIdentity(principal);
-		}
+		public UserPrincipal(ClaimsPrincipal principal) : base(principal) => this.Identity = new UserIdentity(principal);
 
 		/// <summary>
 		/// Gets the current principal
