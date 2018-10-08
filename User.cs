@@ -168,7 +168,7 @@ namespace net.vieapps.Components.Security
 			this.SessionID = sessionID;
 			this.Roles = roles ?? new List<string>();
 			this.Privileges = privileges ?? new List<Privilege>();
-			this.AuthenticationType = authenticationType ?? "API";
+			this.AuthenticationType = authenticationType ?? "APIs";
 		}
 
 		#region Properties
