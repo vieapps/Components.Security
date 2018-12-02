@@ -87,8 +87,13 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the privileges
 		/// </summary>
+		public Privileges() : this(false) { }
+
+		/// <summary>
+		/// Initializes the privileges
+		/// </summary>
 		/// <param name="anonymousCanView">true to allow anonymous can view by default</param>
-		public Privileges(bool anonymousCanView = false)
+		public Privileges(bool anonymousCanView)
 		{
 			this.DownloadableRoles = new HashSet<string>();
 			this.DownloadableUsers = new HashSet<string>();

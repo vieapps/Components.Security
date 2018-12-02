@@ -18,6 +18,9 @@ using net.vieapps.Components.Utility;
 
 namespace net.vieapps.Components.Security
 {
+	/// <summary>
+	/// Presents an user
+	/// </summary>
 	public interface IUser
 	{
 
