@@ -52,9 +52,15 @@ namespace net.vieapps.Components.Security
 			}
 		}
 
+		static string _EncryptionKey = null;
+
 		/// <summary>
-		/// Gets the encryption key for encrypting/decrypting captcha image
+		/// Gets or Sets the encryption key for encrypting/decrypting captcha image
 		/// </summary>
-		public static string EncryptionKey => UtilityService.GetAppSetting("Keys:Encryption", CryptoService.DEFAULT_PASS_PHRASE);
+		public static string EncryptionKey
+		{
+			get => CaptchaService._EncryptionKey ?? (CaptchaService._EncryptionKey = UtilityService.GetAppSetting("Keys:Encryption", CryptoService.DEFAULT_PASS_PHRASE));
+			set => CaptchaService._EncryptionKey = value;
+		}
 	}
 }

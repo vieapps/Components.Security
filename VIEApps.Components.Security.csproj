@@ -3,37 +3,31 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
+		<WarningLevel>3</WarningLevel>
+		<DocumentationFile>bin\$(Configuration)\netstandard2.0\VIEApps.Components.Security.xml</DocumentationFile>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
-		<AssemblyVersion>10.2.1812.1</AssemblyVersion>
-		<FileVersion>10.2.1812.1</FileVersion>
-		<InformationalVersion>v10.2.netstandard-2+rev:2018.12.03-lstcmp</InformationalVersion>
+		<SignAssembly>false</SignAssembly>
+		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
+		<AssemblyVersion>10.2.1902.1</AssemblyVersion>
+		<FileVersion>10.2.1902.1</FileVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2019.01.31-latest.components-captcha.encryption.key</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.2.1812.1</Version>
-		<SignAssembly>false</SignAssembly>
-		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
+		<Version>10.2.1902.1</Version>
 		<Title>VIEApps NGX User Security Base</Title>
-		<Description>User security base library for developing apps on .NET Standard 2.0</Description>
+		<Description>User security base for developing apps on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
-		<Copyright>© 2018 VIEApps.net</Copyright>
+		<Copyright>© 2019 VIEApps.net</Copyright>
+		<PackageLicense>LICENSE.md</PackageLicense>
+		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components for better performance</PackageReleaseNotes>
-		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
+		<PackageReleaseNotes>Set encryption key for encrypting/decrypting captcha image</PackageReleaseNotes>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<WarningLevel>3</WarningLevel>
-		<DocumentationFile>bin\Debug\netstandard2.0\VIEApps.Components.Security.xml</DocumentationFile>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<WarningLevel>3</WarningLevel>
-		<DocumentationFile>bin\Release\netstandard2.0\VIEApps.Components.Security.xml</DocumentationFile>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -45,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="VIEApps.Components.Utility" Version="10.2.1812.1" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.2.1902.1" />
 	</ItemGroup>
 
 </Project>
