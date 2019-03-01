@@ -16,6 +16,8 @@ using Newtonsoft.Json.Linq;
 using net.vieapps.Components.Utility;
 #endregion
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("VIEApps.Components.XUnitTests")]
+
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
