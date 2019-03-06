@@ -33,8 +33,8 @@ namespace net.vieapps.Components.Security
 				}.ToJson().ToString(Formatting.None).ToBase64Url(),
 				(payload ?? new JObject()).ToString(Formatting.None).ToBase64Url()
 			};
-			segments.Add(string.Join(".", segments).GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm ?? "SHA256", false).ToBase64Url(true));
-			return string.Join(".", segments);
+			segments.Add(segments.Join(".").GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm ?? "SHA256", false).ToBase64Url(true));
+			return segments.Join(".");
 		}
 
 		/// <summary>
@@ -54,7 +54,7 @@ namespace net.vieapps.Components.Security
 			if (parts.Length != 3)
 				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
 
-			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, (parts[0].FromBase64Url().ToExpandoObject().Get<string>("alg") ?? "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
+			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, parts[0].FromBase64Url().ToExpandoObject().Get("alg", "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
 				throw new InvalidTokenSignatureException();
 
 			return parts[1].FromBase64Url();

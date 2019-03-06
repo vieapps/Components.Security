@@ -43,7 +43,7 @@ namespace net.vieapps.Components.Security
 		{
 			this.ID = userID;
 			this.SessionID = sessionID;
-			this.AuthenticationType = authenticationType ?? "API";
+			this.AuthenticationType = authenticationType ?? "APIs";
 			this.Roles = roles ?? new List<string>();
 			this.Privileges = privileges ?? new List<Privilege>();
 			this.BuildClaims();
@@ -97,7 +97,7 @@ namespace net.vieapps.Components.Security
 		{
 			this.ID = user?.ID;
 			this.SessionID = user?.SessionID;
-			this.AuthenticationType = user?.AuthenticationType ?? "API";
+			this.AuthenticationType = user?.AuthenticationType ?? "APIs";
 			this.Roles = user?.Roles ?? new List<string>();
 			this.Privileges = user?.Privileges ?? new List<Privilege>();
 			this.BuildClaims();
