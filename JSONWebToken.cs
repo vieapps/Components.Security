@@ -1,10 +1,8 @@
 ﻿#region Related components
 using System;
 using System.Collections.Generic;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using net.vieapps.Components.Utility;
 #endregion
 
@@ -47,7 +45,7 @@ namespace net.vieapps.Components.Security
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
 		public static string Decode(string token, string key, bool verify = true)
 		{
-			var parts = !string.IsNullOrEmpty(token)
+			var parts = !string.IsNullOrWhiteSpace(token)
 				? token.ToArray('.', true)
 				: new string[] { };
 
@@ -68,6 +66,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="verify">Whether to verify the signature</param>
 		/// <returns>An <see cref="JObject">JObject</see> object that representing the payload</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
-		public static JObject DecodeAsJson(string token, string key, bool verify = true) => JObject.Parse(JSONWebToken.Decode(token, key, verify));
+		public static JObject DecodeAsJson(string token, string key, bool verify = true)
+			=> JObject.Parse(JSONWebToken.Decode(token, key, verify));
 	}
 }

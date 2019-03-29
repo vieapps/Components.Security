@@ -9,14 +9,14 @@
 		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>10.2.1903.3</AssemblyVersion>
-		<FileVersion>10.2.1903.3</FileVersion>
-		<InformationalVersion>v10.2.netstandard-2+rev:2019.03.06-code.refactors</InformationalVersion>
+		<AssemblyVersion>10.2.1904.1</AssemblyVersion>
+		<FileVersion>10.2.1904.1</FileVersion>
+		<InformationalVersion>v10.2.netstandard-2+rev:2019.03.29-code.refactors</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.2.1903.3</Version>
+		<Version>10.2.1904.1</Version>
 		<Title>VIEApps NGX User Security Base</Title>
 		<Description>User security base for developing apps on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
@@ -39,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.2.1903.3" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.2.1904.1" />
 	</ItemGroup>
 
 </Project>
