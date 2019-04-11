@@ -157,7 +157,8 @@ namespace net.vieapps.Components.Security
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="user">The identity of user</param>
-		public User(IUser user) : this(user?.ID, user?.SessionID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
+		public User(IUser user)
+			: this(user?.ID, user?.SessionID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the User class
@@ -244,7 +245,8 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="role"></param>
 		/// <returns></returns>
-		public bool IsInRole(string role) => !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
+		public bool IsInRole(string role)
+			=> !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
 
 		/// <summary>
 		/// Determines an user can manage (means the user can act like an administrator)
@@ -548,14 +550,10 @@ namespace net.vieapps.Components.Security
 
 		#region Normalize & combine privileges
 		internal static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
-		{
-			return (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
-		}
+			=> (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
 
 		internal static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users)
-		{
-			return (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
-		}
+			=> (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
 
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
