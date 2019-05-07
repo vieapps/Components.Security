@@ -543,6 +543,13 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
+		/// <summary>
+		/// Gets the default instance of an anonymous user
+		/// </summary>
+		/// <param name="sessionID"></param>
+		/// <returns></returns>
+		public static User GetDefault(string sessionID = null)
+			=> new User("", sessionID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
 	}
 
 	public static class UserExtentions
