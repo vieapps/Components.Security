@@ -148,14 +148,9 @@ namespace net.vieapps.Components.Security
 		Authenticated,
 
 		/// <summary>
-		/// Signed-in accounts that marked as member of a service/site
-		/// </summary>
-		Authorized,
-
-		/// <summary>
 		/// Signed-in accounts that mark as system administrator
 		/// </summary>
-		SystemAdministrator,
+		SystemAdministrator
 	}
 
 	//  --------------------------------------------------------------------------------------------
@@ -233,7 +228,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Archieved mean the content is archieved for using with other purpose in the furture.
 		/// </summary>
-		Archieved,
+		Archieved
 	}
 
 }

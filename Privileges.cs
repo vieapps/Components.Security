@@ -9,7 +9,7 @@ using net.vieapps.Components.Utility;
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Presents a privilege (acess permission) to perform an action on a specified object of a specified service
+	/// Presents a privilege to perform an action on a specified object of a specified service
 	/// </summary>
 	[Serializable]
 	public class Privilege
@@ -17,20 +17,44 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the privilege
 		/// </summary>
-		public Privilege() : this(null, null, null, null) { }
+		public Privilege()
+			: this(null, null, null) { }
 
 		/// <summary>
 		/// Initializes the privilege
 		/// </summary>
-		/// <param name="serviceName"></param>
-		/// <param name="objectName"></param>
-		/// <param name="role"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="role">The privilege role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see> enum)</param>
+		public Privilege(string serviceName, string objectName, string role)
+			: this(serviceName, objectName, null, role) { }
+
+		/// <summary>
+		/// Initializes the privilege
+		/// </summary>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
+		/// <param name="role">The privilege role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see> enum)</param>
 		public Privilege(string serviceName, string objectName, string objectIdentity, string role)
+			: this(serviceName, objectName, objectIdentity, PrivilegeRole.Viewer)
+			=> this.Role = Enum.TryParse(role, out PrivilegeRole privilegeRole)
+				? privilegeRole.ToString()
+				: PrivilegeRole.Viewer.ToString();
+
+		/// <summary>
+		/// Initializes the privilege
+		/// </summary>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
+		/// <param name="role">The privilege role</param>
+		public Privilege(string serviceName, string objectName, string objectIdentity, PrivilegeRole role)
 		{
 			this.ServiceName = serviceName ?? "";
 			this.ObjectName = objectName ?? "";
 			this.ObjectIdentity = objectIdentity ?? "";
-			this.Role = role ?? PrivilegeRole.Viewer.ToString();
+			this.Role = role.ToString();
 			this.Actions = new List<string>();
 		}
 
@@ -87,7 +111,8 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the privileges
 		/// </summary>
-		public Privileges() : this(false) { }
+		public Privileges()
+			: this(false) { }
 
 		/// <summary>
 		/// Initializes the privileges

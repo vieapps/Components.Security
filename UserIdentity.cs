@@ -4,10 +4,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Security.Principal;
 using System.Security.Claims;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using net.vieapps.Components.Utility;
 #endregion
 
@@ -21,7 +17,9 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with the specified authentication type
 		/// </summary>
-		public UserIdentity() : base() => this.SetUser();
+		public UserIdentity()
+			: base()
+			=> this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
@@ -29,7 +27,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType) => this.SetUser();
+		public UserIdentity(string userID, string sessionID, string authenticationType = null)
+			: this(userID, sessionID, null, null, authenticationType)
+			=> this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
@@ -55,13 +55,17 @@ namespace net.vieapps.Components.Security
 		/// Initializes a new instance of the UserIdentity class with an associated principal
 		/// </summary>
 		/// <param name="principal">The user principal</param>
-		public UserIdentity(ClaimsPrincipal principal) : this(principal?.Claims) => this.SetUser();
+		public UserIdentity(ClaimsPrincipal principal)
+			: this(principal?.Claims)
+			=> this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with an associated identity
 		/// </summary>
 		/// <param name="identity">The user identity</param>
-		public UserIdentity(ClaimsIdentity identity) : this(identity?.Claims) => this.SetUser();
+		public UserIdentity(ClaimsIdentity identity)
+			: this(identity?.Claims)
+			=> this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with preset claims
@@ -185,11 +189,11 @@ namespace net.vieapps.Components.Security
 			var claim = this.FindFirst(ClaimTypes.UserData);
 			if (claim != null)
 				this.RemoveClaim(claim);
-			this.AddClaim(new Claim(ClaimTypes.UserData, new JObject
+			this.AddClaim(new Claim(ClaimTypes.UserData, new Newtonsoft.Json.Linq.JObject
 			{
 				{ "Roles", this.Roles.ToJArray() },
 				{ "Privileges", this.Privileges.ToJArray() }
-			}.ToString(Formatting.None)));
+			}.ToString(Newtonsoft.Json.Formatting.None)));
 		}
 
 		/// <summary>
@@ -203,100 +207,44 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
-		#region Authentication & Authorization
-		internal User User { get; set; }
+		/// <summary>
+		/// Gets the user object that related to this identity
+		/// </summary>
+		public User User { get; private set; }
 
-		void SetUser() => this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
+		void SetUser()
+			=> this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
 
 		/// <summary>
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
-		public override bool IsAuthenticated => this.User.IsAuthenticated;
+		public override bool IsAuthenticated
+			=> this.User.IsAuthenticated;
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
 		/// </summary>
-		public bool IsSystemAccount => this.User.IsSystemAccount;
+		public bool IsSystemAccount
+			=> this.User.IsSystemAccount;
 
 		/// <summary>
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
-		public bool IsSystemAdministrator => this.User.IsSystemAdministrator;
+		public bool IsSystemAdministrator
+=> this.User.IsSystemAdministrator;
 
 		/// <summary>
 		/// Gets the collection of the system administrators
 		/// </summary>
-		public static HashSet<string> SystemAdministrators => User.SystemAdministrators;
+		public static HashSet<string> SystemAdministrators
+			=> User.SystemAdministrators;
 
 		/// <summary>
 		/// Determines whether this user belongs to the specified role or not
 		/// </summary>
 		/// <param name="role"></param>
 		/// <returns></returns>
-		public bool IsInRole(string role) => this.User.IsInRole(role);
-
-		/// <summary>
-		/// Determines an user can manage (means the user can act like an administrator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanManage(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanManage(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Determines an user can moderate (means the user can act like a moderator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanModerate(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanModerate(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Determines an user can edit (means the user can act like an editor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanEdit(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanEdit(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Determines an user can contribute (means the user can act like a contributor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanContribute(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanContribute(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Determines an user can view (means the user can act like a viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanView(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanView(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Determines an user can download (means the user can act like a downloader/viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanDownload(Privileges originalPrivileges, Privileges parentPrivileges = null) => this.User.CanDownload(originalPrivileges, parentPrivileges);
-
-		/// <summary>
-		/// Gets the state that determines the user can perform the action or not
-		/// </summary>
-		/// <param name="serviceName">The name of the service</param>
-		/// <param name="objectName">The name of the service's object</param>
-		/// <param name="objectIdentity">The identity of the service's object</param>
-		/// <param name="action">The action to perform on the object of this service</param>
-		/// <param name="privileges">The working privileges of the object (entity)</param>
-		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
-		/// <param name="getActions">The function to prepare the actions of each privilege</param>
-		/// <returns></returns>
-		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<IUser, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
-			=> this.User.IsAuthorized(serviceName, objectName, objectIdentity, action, privileges, getPrivileges, getActions);
-		#endregion
-
+		public bool IsInRole(string role)
+			=> this.User.IsInRole(role);
 	}
 }

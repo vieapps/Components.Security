@@ -6,13 +6,8 @@ using System.Security.Principal;
 using System.Security.Claims;
 using System.Xml.Serialization;
 using System.Numerics;
-using System.Dynamic;
-using System.Runtime.Serialization;
-
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-
 using net.vieapps.Components.Utility;
 #endregion
 
@@ -21,12 +16,10 @@ using net.vieapps.Components.Utility;
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Presents an user
+	/// Presents information of an user in the VIEAPps NGX
 	/// </summary>
 	public interface IUser
 	{
-
-		#region Properties
 		/// <summary>
 		/// Gets or sets identity of user
 		/// </summary>
@@ -51,95 +44,28 @@ namespace net.vieapps.Components.Security
 		/// Gets the authentication type
 		/// </summary>
 		string AuthenticationType { get; }
-		#endregion
 
-		#region Authentication
 		/// <summary>
-		/// Gets the state that determines the user is authenticated or not
+		/// Determines the user is authenticated or not
 		/// </summary>
 		bool IsAuthenticated { get; }
 
 		/// <summary>
-		/// Gets the state that determines the user is system account
+		/// Determines the user is system account
 		/// </summary>
 		bool IsSystemAccount { get; }
 
 		/// <summary>
-		/// Gets the state that determines the user is system administrator
+		/// Determines the user is system administrator
 		/// </summary>
 		bool IsSystemAdministrator { get; }
-		#endregion
 
-		#region Authorization
 		/// <summary>
 		/// Determines whether this user belongs to the specified role or not
 		/// </summary>
-		/// <param name="role"></param>
+		/// <param name="role">The role need to check</param>
 		/// <returns></returns>
 		bool IsInRole(string role);
-
-		/// <summary>
-		/// Determines an user can manage (means the user can act like an administrator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanManage(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Determines an user can moderate (means the user can act like a moderator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanModerate(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Determines an user can edit (means the user can act like an editor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanEdit(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Determines an user can contribute (means the user can act like a contributor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanContribute(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Determines an user can view (means the user can act like a viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanView(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Determines an user can download (means the user can act like a downloader/viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		bool CanDownload(Privileges originalPrivileges, Privileges parentPrivileges = null);
-
-		/// <summary>
-		/// Gets the state that determines the user can perform the action or not
-		/// </summary>
-		/// <param name="serviceName">The name of the service</param>
-		/// <param name="objectName">The name of the service's object</param>
-		/// <param name="objectIdentity">The identity of the service's object</param>
-		/// <param name="action">The action to perform on the object of this service</param>
-		/// <param name="privileges">The working privileges of the object (entity)</param>
-		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
-		/// <param name="getActions">The function to prepare the actions of each privilege</param>
-		/// <returns></returns>
-		bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<IUser, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null);
-		#endregion
-
 	}
 
 	/// <summary>
@@ -151,7 +77,8 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the User class
 		/// </summary>
-		public User() { }
+		public User()
+			: this(null, null, null, null) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
@@ -177,6 +104,14 @@ namespace net.vieapps.Components.Security
 			this.AuthenticationType = authenticationType ?? "APIs";
 		}
 
+		/// <summary>
+		/// Gets the default instance of an anonymous user
+		/// </summary>
+		/// <param name="sessionID"></param>
+		/// <returns></returns>
+		public static User GetDefault(string sessionID = null)
+			=> new User("", sessionID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
+
 		#region Properties
 		/// <summary>
 		/// Gets or sets identity of user
@@ -197,27 +132,33 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets the working privileges (means scopes/working privileges of services/services' objects)
 		/// </summary>
 		public List<Privilege> Privileges { get; set; } = new List<Privilege>();
+
+		static string _SystemAccountID = null;
+		static HashSet<string> _SystemAdministrators = null;
+
+		/// <summary>
+		/// Gets the identity of the system account
+		/// </summary>
+		internal static string SystemAccountID => User._SystemAccountID ?? (User._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account"));
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
 		#endregion
 
-		#region Authentication
+		#region Authentication & Authorization
 		/// <summary>
 		/// Gets the authentication type
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public string AuthenticationType { get; set; } = "API";
+		public string AuthenticationType { get; set; } = "APIs";
 
 		/// <summary>
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public bool IsAuthenticated => !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
-
-		static string _SystemAccountID = null;
-
-		/// <summary>
-		/// Gets the identity of the system account
-		/// </summary>
-		internal static string SystemAccountID => User._SystemAccountID ?? (User._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account"));
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
@@ -231,15 +172,6 @@ namespace net.vieapps.Components.Security
 		[JsonIgnore, XmlIgnore]
 		public bool IsSystemAdministrator => this.IsSystemAccount || (this.IsAuthenticated && User.SystemAdministrators.Contains(this.ID.ToLower()));
 
-		static HashSet<string> _SystemAdministrators = null;
-
-		/// <summary>
-		/// Gets the collection of the system administrators
-		/// </summary>
-		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
-		#endregion
-
-		#region Authorization
 		/// <summary>
 		/// Determines whether this user belongs to the specified role or not
 		/// </summary>
@@ -247,321 +179,375 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public bool IsInRole(string role)
 			=> !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
-
-		/// <summary>
-		/// Determines an user can manage (means the user can act like an administrator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanManage(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			if (!this.IsAuthenticated)
-				return false;
-
-			var can = originalPrivileges != null && originalPrivileges.AdministrativeUsers != null && originalPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
-			if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.AdministrativeRoles != null)
-				can = originalPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.AdministrativeUsers != null && parentPrivileges.AdministrativeUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.AdministrativeRoles != null)
-					can = parentPrivileges.AdministrativeRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Determines an user can moderate (means the user can act like a moderator)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanModerate(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			if (!this.IsAuthenticated)
-				return false;
-
-			var can = this.CanManage(originalPrivileges, parentPrivileges);
-
-			if (!can && originalPrivileges != null)
-			{
-				can = originalPrivileges.ModerateUsers != null && originalPrivileges.ModerateUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ModerateRoles != null)
-					can = originalPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.ModerateUsers != null && parentPrivileges.ModerateUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.ModerateRoles != null)
-					can = parentPrivileges.ModerateRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Determines an user can edit (means the user can act like an editor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanEdit(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			if (!this.IsAuthenticated)
-				return false;
-
-			var can = this.CanModerate(originalPrivileges, parentPrivileges);
-
-			if (!can && originalPrivileges != null)
-			{
-				can = originalPrivileges.EditableUsers != null && originalPrivileges.EditableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.EditableRoles != null)
-					can = originalPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.EditableUsers != null && parentPrivileges.EditableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.EditableRoles != null)
-					can = parentPrivileges.EditableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Determines an user can contribute (means the user can act like a contributor)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanContribute(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			var can = this.CanEdit(originalPrivileges, parentPrivileges);
-
-			if (!can && originalPrivileges != null)
-			{
-				can = originalPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ContributiveRoles != null)
-					can = originalPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.ContributiveUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ContributiveUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.ContributiveRoles != null)
-					can = parentPrivileges.ContributiveRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Determines an user can view (means the user can act like a viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanView(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			var can = this.CanContribute(originalPrivileges, parentPrivileges);
-
-			if (!can && originalPrivileges != null)
-			{
-				can = originalPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.ViewableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.ViewableRoles != null)
-					can = originalPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.ViewableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.ViewableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.ViewableRoles != null)
-					can = parentPrivileges.ViewableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Determines an user can download (means the user can act like a downloader/viewer)
-		/// </summary>
-		/// <param name="originalPrivileges">The object that presents the working permissions of current resource</param>
-		/// <param name="parentPrivileges">The object that presents the working permissions of parent resource</param>
-		/// <returns>true if the user got right; otherwise false</returns>
-		public bool CanDownload(Privileges originalPrivileges, Privileges parentPrivileges = null)
-		{
-			var can = (originalPrivileges == null || UserExtentions.IsEmpty(originalPrivileges.DownloadableUsers, originalPrivileges.DownloadableRoles))
-				&& (parentPrivileges == null || UserExtentions.IsEmpty(parentPrivileges.DownloadableUsers, parentPrivileges.DownloadableRoles))
-				? this.CanView(originalPrivileges, parentPrivileges)
-				: false;
-
-			if (!can && originalPrivileges != null)
-			{
-				can = originalPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && originalPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && originalPrivileges != null && originalPrivileges.DownloadableRoles != null)
-					can = originalPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			if (!can && parentPrivileges != null)
-			{
-				can = parentPrivileges.DownloadableUsers != null && !string.IsNullOrWhiteSpace(this.ID) && parentPrivileges.DownloadableUsers.Contains(this.ID.ToLower());
-				if (!can && this.Roles != null && parentPrivileges.DownloadableRoles != null)
-					can = parentPrivileges.DownloadableRoles.Intersect(this.Roles).Count() > 0;
-			}
-
-			return can;
-		}
-
-		/// <summary>
-		/// Gets the state that determines the user can perform the action or not
-		/// </summary>
-		/// <param name="serviceName">The name of the service</param>
-		/// <param name="objectName">The name of the service's object</param>
-		/// <param name="objectIdentity">The identity of the service's object</param>
-		/// <param name="action">The action to perform on the object of this service</param>
-		/// <param name="privileges">The working privileges of the object (entity)</param>
-		/// <param name="getPrivileges">The function to prepare the collection of privileges</param>
-		/// <param name="getActions">The function to prepare the actions of each privilege</param>
-		/// <returns></returns>
-		public bool IsAuthorized(string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges = null, Func<IUser, Privileges, List<Privilege>> getPrivileges = null, Func<PrivilegeRole, List<string>> getActions = null)
-		{
-			// prepare privileges
-			var workingPrivileges = this.Privileges != null && this.Privileges.Count > 0 && this.Privileges.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals(objectName) && p.ObjectIdentity.IsEquals(objectIdentity)) != null
-				? this.Privileges
-				: null;
-			if (workingPrivileges == null)
-			{
-				if (getPrivileges == null)
-				{
-					workingPrivileges = new List<Privilege>();
-					if (this.CanManage(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Administrator.ToString()));
-					else if (this.CanModerate(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Moderator.ToString()));
-					else if (this.CanEdit(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Editor.ToString()));
-					else if (this.CanContribute(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Contributor.ToString()));
-					else if (this.CanView(privileges))
-						workingPrivileges.Add(new Privilege(serviceName, objectName, objectIdentity, PrivilegeRole.Viewer.ToString()));
-				}
-				else
-					workingPrivileges = getPrivileges(this, privileges);
-			}
-
-			// prepare actions
-			workingPrivileges.Where(privilege => privilege.Actions == null || privilege.Actions.Count < 1).ForEach(p =>
-			{
-				if (getActions != null)
-					try
-					{
-						if (!Enum.TryParse(p.Role, out PrivilegeRole role))
-							role = PrivilegeRole.Viewer;
-						p.Actions = getActions(role);
-					}
-					catch { }
-
-				if (p.Actions == null || p.Actions.Count < 1)
-				{
-					var actions = new List<Action>();
-					if (p.Role.Equals(PrivilegeRole.Administrator.ToString()))
-						actions.Add(Action.Full);
-
-					else if (p.Role.Equals(PrivilegeRole.Moderator.ToString()))
-						actions = new List<Action>()
-						{
-							Action.CheckIn,
-							Action.CheckOut,
-							Action.Comment,
-							Action.Vote,
-							Action.Approve,
-							Action.Restore,
-							Action.Rollback,
-							Action.Delete,
-							Action.Update,
-							Action.Create,
-							Action.View,
-							Action.Download,
-						};
-
-					else if (p.Role.Equals(PrivilegeRole.Editor.ToString()))
-						actions = new List<Action>()
-						{
-							Action.CheckIn,
-							Action.CheckOut,
-							Action.Comment,
-							Action.Vote,
-							Action.Restore,
-							Action.Rollback,
-							Action.Delete,
-							Action.Update,
-							Action.Create,
-							Action.View,
-							Action.Download,
-						};
-
-					else if (p.Role.Equals(PrivilegeRole.Contributor.ToString()))
-						actions = new List<Action>()
-						{
-							Action.CheckIn,
-							Action.CheckOut,
-							Action.Comment,
-							Action.Vote,
-							Action.Create,
-							Action.View,
-							Action.Download,
-						};
-
-					else
-						actions = new List<Action>()
-						{
-							Action.View,
-							Action.Download,
-						};
-
-					p.Actions = actions.Select(a => a.ToString()).ToList();
-				}
-			});
-
-			// get the first matched privilege
-			var workingPrivilege = workingPrivileges.FirstOrDefault(p =>
-			{
-				return p.ServiceName.IsEquals(serviceName)
-					&& p.ObjectName.IsEquals(string.IsNullOrWhiteSpace(objectName) ? "" : objectName)
-					&& p.ObjectIdentity.IsEquals(string.IsNullOrWhiteSpace(objectIdentity) ? "" : objectIdentity);
-			});
-
-			// return the state that determine user has action or not
-			return workingPrivilege != null
-				? workingPrivilege.Actions.FirstOrDefault(a => a.Equals(Action.Full.ToString()) || a.Equals(action.ToString())) != null
-				: false;
-		}
 		#endregion
 
-		/// <summary>
-		/// Gets the default instance of an anonymous user
-		/// </summary>
-		/// <param name="sessionID"></param>
-		/// <returns></returns>
-		public static User GetDefault(string sessionID = null)
-			=> new User("", sessionID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
 	}
 
 	public static class UserExtentions
 	{
 
-		#region Normalize & combine privileges
-		internal static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
-			=> (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+		#region Role-based authorizations of a specified service & object
+		static bool IsOn(this IUser user, string serviceName, string objectName, PrivilegeRole role)
+		{
+			if (user == null)
+				return false;
 
-		internal static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users)
-			=> (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
+			serviceName = serviceName ?? "";
+			objectName = objectName ?? "";
 
+			var privilege = user.Privileges?.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals(objectName) && p.ObjectIdentity.IsEquals(""));
+			if (privilege == null && !objectName.Equals(""))
+				privilege = user.Privileges?.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals("") && p.ObjectIdentity.IsEquals(""));
+
+			return privilege != null
+				? privilege.Role.ToEnum<PrivilegeRole>().Equals(role)
+				: false;
+		}
+
+		/// <summary>
+		/// Determines the user is administrator or not (can manage or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsAdministrator(this IUser user, string serviceName, string objectName)
+			=> user != null && user.IsAuthenticated
+				? user.IsSystemAdministrator || user.IsOn(serviceName, objectName, PrivilegeRole.Administrator)
+				: false;
+
+		/// <summary>
+		/// Determines the user is moderator or not (can moderate or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsModerator(this IUser user, string serviceName, string objectName)
+			=> user != null && user.IsAuthenticated
+				? user.IsAdministrator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Moderator)
+				: false;
+
+		/// <summary>
+		/// Determines the user is editor or not (can edit or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsEditor(this IUser user, string serviceName, string objectName)
+			=> user != null && user.IsAuthenticated
+				? user.IsModerator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Editor)
+				: false;
+
+		/// <summary>
+		/// Determines the user is contributor or not (can contribute or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsContributor(this IUser user, string serviceName, string objectName)
+			=> user != null && (user.IsEditor(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Contributor));
+
+		/// <summary>
+		/// Determines the user is viewer or not (can view or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsViewer(this IUser user, string serviceName, string objectName)
+			=> user != null && (user.IsContributor(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Viewer));
+
+		/// <summary>
+		/// Determines the user is downloader or not (can download or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <returns></returns>
+		public static bool IsDownloader(this IUser user, string serviceName, string objectName)
+			=> user != null && (user.IsViewer(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Downloader));
+		#endregion
+
+		#region Role-based authorizations of a specified privileges
+		static bool IsIn(this IUser user, HashSet<string> roles, HashSet<string> users)
+			=> string.IsNullOrWhiteSpace(user.ID)
+				? user.Roles == null || user.Roles.Count < 1 ? false : (roles == null || roles.Count < 1 ? false : roles.Intersect(user.Roles).Count() > 0)
+				: (users == null || users.Count < 1 ? false : users.Contains(user.ID)) || (user.Roles == null || user.Roles.Count < 1 ? false : (roles == null || roles.Count < 1 ? false : roles.Intersect(user.Roles).Count() > 0));
+
+		/// <summary>
+		/// Determines the user is administrator or not (can manage or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsAdministrator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+			=> user != null && user.IsAuthenticated
+				? user.IsSystemAdministrator || user.IsIn(privileges?.AdministrativeRoles, privileges?.AdministrativeUsers) || user.IsIn(parentPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeUsers)
+				: false;
+
+		/// <summary>
+		/// Determines the user is moderator or not (can moderate or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsModerator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+		=> user != null && user.IsAuthenticated
+			? user.IsAdministrator(privileges, parentPrivileges) || user.IsIn(privileges?.ModerateRoles, privileges?.ModerateUsers) || user.IsIn(parentPrivileges?.ModerateRoles, parentPrivileges?.ModerateUsers)
+			: false;
+
+		/// <summary>
+		/// Determines the user is editor or not (can edit or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsEditor(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+			=> user != null && user.IsAuthenticated
+				? user.IsModerator(privileges, parentPrivileges) || user.IsIn(privileges?.EditableRoles, privileges?.EditableUsers) || user.IsIn(parentPrivileges?.EditableRoles, parentPrivileges?.EditableUsers)
+				: false;
+
+		/// <summary>
+		/// Determines the user is contributor or not (can contribute or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsContributor(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+			=> user != null && (user.IsEditor(privileges, parentPrivileges) || user.IsIn(privileges?.ContributiveRoles, privileges?.ContributiveUsers) || user.IsIn(parentPrivileges?.ContributiveRoles, parentPrivileges?.ContributiveUsers));
+
+		/// <summary>
+		/// Determines the user is viewer or not (can view or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsViewer(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+			=> user != null && (user.IsContributor(privileges, parentPrivileges) || user.IsIn(privileges?.ViewableRoles, privileges?.ViewableUsers) || user.IsIn(parentPrivileges?.ViewableRoles, parentPrivileges?.ViewableUsers));
+
+		/// <summary>
+		/// Determines the user is downloader or not (can download or not)
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The privileges of the object</param>
+		/// <param name="parentPrivileges">The privileges of the parent object</param>
+		/// <returns></returns>
+		public static bool IsDownloader(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
+			=> (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0)
+			|| (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
+			|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0)
+			|| (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
+			? user != null && (user.IsIn(privileges?.DownloadableRoles, privileges?.DownloadableUsers) || user.IsIn(parentPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableUsers))
+			: user != null && user.IsViewer(privileges, parentPrivileges);
+		#endregion
+
+		#region Get role & actions
+		/// <summary>
+		/// Gets the highest privilege role that presents by the privileges
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The working privileges</param>
+		/// <returns></returns>
+		public static PrivilegeRole GetPrivilegeRole(this IUser user, Privileges privileges)
+		{
+			if (user != null)
+			{
+				if (user.IsAdministrator(privileges))
+					return PrivilegeRole.Administrator;
+
+				if (user.IsModerator(privileges))
+					return PrivilegeRole.Moderator;
+
+				if (user.IsEditor(privileges))
+					return PrivilegeRole.Editor;
+
+				if (user.IsContributor(privileges))
+					return PrivilegeRole.Contributor;
+
+				if (user.IsDownloader(privileges) && privileges != null && (privileges.DownloadableRoles == null || privileges.DownloadableRoles.Count < 1) && (privileges.DownloadableUsers == null || privileges.DownloadableUsers.Count < 1))
+					return PrivilegeRole.Viewer;
+				else
+					return PrivilegeRole.Downloader;
+			}
+			return PrivilegeRole.Viewer;
+		}
+
+		/// <summary>
+		/// Gets the default actions of the privilege role
+		/// </summary>
+		/// <param name="role">The privilege role</param>
+		/// <returns></returns>
+		public static List<Action> GetActions(this PrivilegeRole role)
+			=> role.Equals(PrivilegeRole.Administrator)
+				? new List<Action>
+				{
+					Action.Full
+				}
+				: role.Equals(PrivilegeRole.Moderator)
+					? new List<Action>
+					{
+						Action.CheckIn,
+						Action.CheckOut,
+						Action.Comment,
+						Action.Vote,
+						Action.Approve,
+						Action.Restore,
+						Action.Rollback,
+						Action.Delete,
+						Action.Update,
+						Action.Create,
+						Action.View,
+						Action.Download
+					}
+					: role.Equals(PrivilegeRole.Editor)
+						? new List<Action>
+						{
+							Action.CheckIn,
+							Action.CheckOut,
+							Action.Comment,
+							Action.Vote,
+							Action.Restore,
+							Action.Rollback,
+							Action.Delete,
+							Action.Update,
+							Action.Create,
+							Action.View,
+							Action.Download
+						}
+						: role.Equals(PrivilegeRole.Contributor)
+							? new List<Action>
+							{
+								Action.CheckIn,
+								Action.CheckOut,
+								Action.Comment,
+								Action.Vote,
+								Action.Create,
+								Action.View,
+								Action.Download
+							}
+							: new List<Action>
+							{
+								Action.View,
+								Action.Download
+							};
+
+		/// <summary>
+		/// Gets the default actions of the privilege role
+		/// </summary>
+		/// <param name="role">The privilege role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see>)</param>
+		/// <returns></returns>
+		public static List<Action> GetActions(this string role)
+			=> (Enum.TryParse(role, out PrivilegeRole privilegeRole) ? privilegeRole : PrivilegeRole.Viewer).GetActions();
+
+		/// <summary>
+		/// Gets the actions of the privilege
+		/// </summary>
+		/// <param name="privilege">The privilege to perform an action on a specified object of a specified service</param>
+		/// <returns></returns>
+		public static List<Action> GetActions(this Privilege privilege)
+			=> privilege.Actions != null && privilege.Actions.Count > 0
+				? privilege.Actions.Select(action => Enum.TryParse(action, out Action a) ? a : Action.View).Distinct().ToList()
+				: (privilege.Role ?? "").GetActions();
+
+		/// <summary>
+		/// Gets the actions of the highest privilege
+		/// </summary>
+		/// <param name="user"></param>
+		/// <param name="privileges">The working privileges</param>
+		/// <returns></returns>
+		public static List<Action> GetActions(this IUser user, Privileges privileges)
+			=> user != null
+				? user.GetPrivilegeRole(privileges).GetActions()
+				: PrivilegeRole.Viewer.GetActions();
+		#endregion
+
+		#region Action-based authorizations of a specified service, object & privileges
+		/// <summary>
+		/// Determines the user can perform the action or not
+		/// </summary>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
+		/// <param name="action">The action to perform on the service's object</param>
+		/// <param name="getPrivileges">The function to prepare the privileges when the user got empty/null privilege</param>
+		/// <param name="getActions">The function to prepare the actions when the matched privilege got empty/null action</param>
+		/// <returns></returns>
+		public static bool IsAuthorized(this IUser user, string serviceName, string objectName, string objectIdentity, Action action, Func<IUser, string, string, List<Privilege>> getPrivileges, Func<PrivilegeRole, List<Action>> getActions)
+		{
+			if (user == null)
+				return false;
+
+			serviceName = serviceName ?? "";
+			objectName = objectName ?? "";
+			objectIdentity = objectIdentity ?? "";
+
+			var privileges = user.Privileges?.Where(p => p.ServiceName.IsEquals(serviceName)).ToList();
+			if (privileges == null || privileges.Count < 1)
+				privileges = getPrivileges?.Invoke(user, serviceName, objectName) ?? new List<Privilege>();
+
+			var privilege = privileges.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals(objectName) && p.ObjectIdentity.IsEquals(objectIdentity));
+			if (privilege == null)
+				return false;
+
+			var fullAction = Action.Full.ToString();
+			var requestAction = action.ToString();
+			var actions = privilege.Actions != null && privilege.Actions.Count > 0
+				? privilege.Actions
+				: (getActions?.Invoke(privilege.Role.ToEnum<PrivilegeRole>()) ?? privilege.GetActions()).Select(a => a.ToString()).ToList();
+			return actions.FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
+		}
+
+		/// <summary>
+		/// Determines the user can perform the action or not
+		/// </summary>
+		/// <param name="action">The action to perform on the service's object</param>
+		/// <param name="privileges">The working privileges of the service's object</param>
+		/// <param name="getActions">The function to prepare the actions when the matched privilege got empty/null action</param>
+		/// <returns></returns>
+		public static bool IsAuthorized(this IUser user, Action action, Privileges privileges, Func<PrivilegeRole, List<Action>> getActions)
+		{
+			if (user != null)
+			{
+				var fullAction = Action.Full.ToString();
+				var requestAction = action.ToString();
+				var actions = getActions?.Invoke(user.GetPrivilegeRole(privileges)) ?? user.GetActions(privileges);
+				var @is = actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
+				if (!@is && action.Equals(Action.Download) && privileges != null && (privileges.DownloadableRoles == null || privileges.DownloadableRoles.Count < 1) && (privileges.DownloadableUsers == null || privileges.DownloadableUsers.Count < 1))
+				{
+					requestAction = Action.View.ToString();
+					@is = actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
+				}
+				return @is;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Determines the user can perform the action or not
+		/// </summary>
+		/// <param name="serviceName">The name of the service</param>
+		/// <param name="objectName">The name of the service's object</param>
+		/// <param name="objectIdentity">The identity of the service's object</param>
+		/// <param name="action">The action to perform on the service's object</param>
+		/// <param name="privileges">The working privileges of the service's object</param>
+		/// <param name="getPrivileges">The function to prepare the privileges when the user got empty/null privilege</param>
+		/// <param name="getActions">The function to prepare the actions when the matched privilege got empty/null action</param>
+		/// <returns></returns>
+		public static bool IsAuthorized(this IUser user, string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges, Func<IUser, string, string, List<Privilege>> getPrivileges, Func<PrivilegeRole, List<Action>> getActions)
+			=> user != null
+				? user.IsAuthorized(serviceName, objectName, objectIdentity, action, getPrivileges, getActions) || user.IsAuthorized(action, privileges, getActions)
+				: false;
+		#endregion
+
+		#region Privileges
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
 		/// </summary>
@@ -572,9 +558,11 @@ namespace net.vieapps.Components.Security
 			if (privileges == null)
 				return null;
 
+			bool isEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+
 			var permissions = new Privileges();
 
-			if (UserExtentions.IsEmpty(privileges.DownloadableRoles, privileges.DownloadableUsers))
+			if (isEmpty(privileges.DownloadableRoles, privileges.DownloadableUsers))
 				permissions.DownloadableRoles = permissions.DownloadableUsers = null;
 			else
 			{
@@ -582,7 +570,7 @@ namespace net.vieapps.Components.Security
 				permissions.DownloadableUsers = privileges.DownloadableUsers;
 			}
 
-			if (UserExtentions.IsEmpty(privileges.ViewableRoles, privileges.ViewableUsers))
+			if (isEmpty(privileges.ViewableRoles, privileges.ViewableUsers))
 				permissions.ViewableRoles = permissions.ViewableUsers = null;
 			else
 			{
@@ -590,7 +578,7 @@ namespace net.vieapps.Components.Security
 				permissions.ViewableUsers = privileges.ViewableUsers;
 			}
 
-			if (UserExtentions.IsEmpty(privileges.ContributiveRoles, privileges.ContributiveUsers))
+			if (isEmpty(privileges.ContributiveRoles, privileges.ContributiveUsers))
 				permissions.ContributiveRoles = permissions.ContributiveUsers = null;
 			else
 			{
@@ -598,7 +586,7 @@ namespace net.vieapps.Components.Security
 				permissions.ContributiveUsers = privileges.ContributiveUsers;
 			}
 
-			if (UserExtentions.IsEmpty(privileges.EditableRoles, privileges.EditableUsers))
+			if (isEmpty(privileges.EditableRoles, privileges.EditableUsers))
 				permissions.EditableRoles = permissions.EditableUsers = null;
 			else
 			{
@@ -606,7 +594,7 @@ namespace net.vieapps.Components.Security
 				permissions.EditableUsers = privileges.EditableUsers;
 			}
 
-			if (UserExtentions.IsEmpty(privileges.ModerateRoles, privileges.ModerateUsers))
+			if (isEmpty(privileges.ModerateRoles, privileges.ModerateUsers))
 				permissions.ModerateRoles = permissions.ModerateUsers = null;
 			else
 			{
@@ -614,7 +602,7 @@ namespace net.vieapps.Components.Security
 				permissions.ModerateUsers = privileges.ModerateUsers;
 			}
 
-			if (UserExtentions.IsEmpty(privileges.AdministrativeRoles, privileges.AdministrativeUsers))
+			if (isEmpty(privileges.AdministrativeRoles, privileges.AdministrativeUsers))
 				permissions.AdministrativeRoles = permissions.AdministrativeUsers = null;
 			else
 			{
@@ -622,12 +610,12 @@ namespace net.vieapps.Components.Security
 				permissions.AdministrativeUsers = privileges.AdministrativeUsers;
 			}
 
-			if (UserExtentions.IsEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
-				&& UserExtentions.IsEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
-				&& UserExtentions.IsEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
-				&& UserExtentions.IsEmpty(permissions.EditableRoles, permissions.EditableUsers)
-				&& UserExtentions.IsEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
-				&& UserExtentions.IsEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
+			if (isEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
+				&& isEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
+				&& isEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
+				&& isEmpty(permissions.EditableRoles, permissions.EditableUsers)
+				&& isEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
+				&& isEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
 				permissions = null;
 
 			return permissions;
@@ -644,9 +632,12 @@ namespace net.vieapps.Components.Security
 			if (originalPrivileges == null && parentPrivileges == null)
 				return null;
 
+			bool isEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+			bool isNotEmpty(HashSet<string> roles, HashSet<string> users) => (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
+
 			var permissions = new Privileges();
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.DownloadableRoles, originalPrivileges.DownloadableUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.DownloadableRoles, originalPrivileges.DownloadableUsers))
 			{
 				permissions.DownloadableRoles = originalPrivileges.DownloadableRoles;
 				permissions.DownloadableUsers = originalPrivileges.DownloadableUsers;
@@ -657,7 +648,7 @@ namespace net.vieapps.Components.Security
 				permissions.DownloadableUsers = parentPrivileges.DownloadableUsers;
 			}
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.ViewableRoles, originalPrivileges.ViewableUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ViewableRoles, originalPrivileges.ViewableUsers))
 			{
 				permissions.ViewableRoles = originalPrivileges.ViewableRoles;
 				permissions.ViewableUsers = originalPrivileges.ViewableUsers;
@@ -668,7 +659,7 @@ namespace net.vieapps.Components.Security
 				permissions.ViewableUsers = parentPrivileges.ViewableUsers;
 			}
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.ContributiveRoles, originalPrivileges.ContributiveUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ContributiveRoles, originalPrivileges.ContributiveUsers))
 			{
 				permissions.ContributiveRoles = originalPrivileges.ContributiveRoles;
 				permissions.ContributiveUsers = originalPrivileges.ContributiveUsers;
@@ -679,7 +670,7 @@ namespace net.vieapps.Components.Security
 				permissions.ContributiveUsers = parentPrivileges.ContributiveUsers;
 			}
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.EditableRoles, originalPrivileges.EditableUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.EditableRoles, originalPrivileges.EditableUsers))
 			{
 				permissions.EditableRoles = originalPrivileges.EditableRoles;
 				permissions.EditableUsers = originalPrivileges.EditableUsers;
@@ -690,7 +681,7 @@ namespace net.vieapps.Components.Security
 				permissions.EditableUsers = parentPrivileges.EditableUsers;
 			}
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.ModerateRoles, originalPrivileges.ModerateUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ModerateRoles, originalPrivileges.ModerateUsers))
 			{
 				permissions.ModerateRoles = originalPrivileges.ModerateRoles;
 				permissions.ModerateUsers = originalPrivileges.ModerateUsers;
@@ -701,7 +692,7 @@ namespace net.vieapps.Components.Security
 				permissions.ModerateUsers = parentPrivileges.ModerateUsers;
 			}
 
-			if (originalPrivileges != null && UserExtentions.IsNotEmpty(originalPrivileges.AdministrativeRoles, originalPrivileges.AdministrativeUsers))
+			if (originalPrivileges != null && isNotEmpty(originalPrivileges.AdministrativeRoles, originalPrivileges.AdministrativeUsers))
 			{
 				permissions.AdministrativeRoles = originalPrivileges.AdministrativeRoles;
 				permissions.AdministrativeUsers = originalPrivileges.AdministrativeUsers;
@@ -712,19 +703,19 @@ namespace net.vieapps.Components.Security
 				permissions.AdministrativeUsers = parentPrivileges.AdministrativeUsers;
 			}
 
-			if (UserExtentions.IsEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
-				&& UserExtentions.IsEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
-				&& UserExtentions.IsEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
-				&& UserExtentions.IsEmpty(permissions.EditableRoles, permissions.EditableUsers)
-				&& UserExtentions.IsEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
-				&& UserExtentions.IsEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
+			if (isEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
+				&& isEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
+				&& isEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
+				&& isEmpty(permissions.EditableRoles, permissions.EditableUsers)
+				&& isEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
+				&& isEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
 				permissions = null;
 
 			return permissions;
 		}
 		#endregion
 
-		#region Working with authenticate token
+		#region Authenticate token
 		/// <summary>
 		/// Gets the authenticate token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
@@ -826,7 +817,7 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
-		#region Working with access token
+		#region Access token
 		/// <summary>
 		/// Gets the access token of an user that associate with a session and return a JSON Web Token
 		/// </summary>
