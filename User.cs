@@ -104,6 +104,20 @@ namespace net.vieapps.Components.Security
 			this.AuthenticationType = authenticationType ?? "APIs";
 		}
 
+		#region Statics
+		static string _SystemAccountID = null;
+		static HashSet<string> _SystemAdministrators = null;
+
+		/// <summary>
+		/// Gets the identity of the system account
+		/// </summary>
+		internal static string SystemAccountID => User._SystemAccountID ?? (User._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account"));
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
+
 		/// <summary>
 		/// Gets the default instance of an anonymous user
 		/// </summary>
@@ -111,6 +125,7 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static User GetDefault(string sessionID = null)
 			=> new User("", sessionID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
+		#endregion
 
 		#region Properties
 		/// <summary>
@@ -133,27 +148,13 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		public List<Privilege> Privileges { get; set; } = new List<Privilege>();
 
-		static string _SystemAccountID = null;
-		static HashSet<string> _SystemAdministrators = null;
-
-		/// <summary>
-		/// Gets the identity of the system account
-		/// </summary>
-		internal static string SystemAccountID => User._SystemAccountID ?? (User._SystemAccountID = UtilityService.GetAppSetting("Users:SystemAccountID", "VIEAppsNGX-MMXVII-System-Account"));
-
-		/// <summary>
-		/// Gets the collection of the system administrators
-		/// </summary>
-		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
-		#endregion
-
-		#region Authentication & Authorization
 		/// <summary>
 		/// Gets the authentication type
 		/// </summary>
-		[JsonIgnore, XmlIgnore]
 		public string AuthenticationType { get; set; } = "APIs";
+		#endregion
 
+		#region Authentication & Authorization
 		/// <summary>
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
@@ -212,9 +213,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="objectName">The name of the service's object</param>
 		/// <returns></returns>
 		public static bool IsAdministrator(this IUser user, string serviceName, string objectName)
-			=> user != null && user.IsAuthenticated
-				? user.IsSystemAdministrator || user.IsOn(serviceName, objectName, PrivilegeRole.Administrator)
-				: false;
+			=> user != null && user.IsOn(serviceName, objectName, PrivilegeRole.Administrator);
 
 		/// <summary>
 		/// Determines the user is moderator or not (can moderate or not)
@@ -224,9 +223,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="objectName">The name of the service's object</param>
 		/// <returns></returns>
 		public static bool IsModerator(this IUser user, string serviceName, string objectName)
-			=> user != null && user.IsAuthenticated
-				? user.IsAdministrator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Moderator)
-				: false;
+			=> user != null && (user.IsAdministrator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Moderator));
 
 		/// <summary>
 		/// Determines the user is editor or not (can edit or not)
@@ -236,9 +233,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="objectName">The name of the service's object</param>
 		/// <returns></returns>
 		public static bool IsEditor(this IUser user, string serviceName, string objectName)
-			=> user != null && user.IsAuthenticated
-				? user.IsModerator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Editor)
-				: false;
+			=> user != null && (user.IsModerator(serviceName, objectName) || user.IsOn(serviceName, objectName, PrivilegeRole.Editor));
 
 		/// <summary>
 		/// Determines the user is contributor or not (can contribute or not)
@@ -285,9 +280,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsAdministrator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && user.IsAuthenticated
-				? user.IsSystemAdministrator || user.IsIn(privileges?.AdministrativeRoles, privileges?.AdministrativeUsers) || user.IsIn(parentPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeUsers)
-				: false;
+			=> user != null && user.IsIn(privileges?.AdministrativeRoles, privileges?.AdministrativeUsers) || user.IsIn(parentPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeUsers);
 
 		/// <summary>
 		/// Determines the user is moderator or not (can moderate or not)
@@ -297,9 +290,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsModerator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-		=> user != null && user.IsAuthenticated
-			? user.IsAdministrator(privileges, parentPrivileges) || user.IsIn(privileges?.ModerateRoles, privileges?.ModerateUsers) || user.IsIn(parentPrivileges?.ModerateRoles, parentPrivileges?.ModerateUsers)
-			: false;
+			=> user != null && user.IsAdministrator(privileges, parentPrivileges) || user.IsIn(privileges?.ModerateRoles, privileges?.ModerateUsers) || user.IsIn(parentPrivileges?.ModerateRoles, parentPrivileges?.ModerateUsers);
 
 		/// <summary>
 		/// Determines the user is editor or not (can edit or not)
@@ -309,9 +300,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsEditor(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && user.IsAuthenticated
-				? user.IsModerator(privileges, parentPrivileges) || user.IsIn(privileges?.EditableRoles, privileges?.EditableUsers) || user.IsIn(parentPrivileges?.EditableRoles, parentPrivileges?.EditableUsers)
-				: false;
+			=> user != null && user.IsModerator(privileges, parentPrivileges) || user.IsIn(privileges?.EditableRoles, privileges?.EditableUsers) || user.IsIn(parentPrivileges?.EditableRoles, parentPrivileges?.EditableUsers);
 
 		/// <summary>
 		/// Determines the user is contributor or not (can contribute or not)
@@ -341,15 +330,13 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsDownloader(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0)
-			|| (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
-			|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0)
-			|| (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
+			=> (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0) || (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
+			|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0) || (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
 			? user != null && (user.IsIn(privileges?.DownloadableRoles, privileges?.DownloadableUsers) || user.IsIn(parentPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableUsers))
 			: user != null && user.IsViewer(privileges, parentPrivileges);
 		#endregion
 
-		#region Get role & actions
+		#region Action-based authorizations of a specified service, object & privileges
 		/// <summary>
 		/// Gets the highest privilege role that presents by the privileges
 		/// </summary>
@@ -372,12 +359,13 @@ namespace net.vieapps.Components.Security
 				if (user.IsContributor(privileges))
 					return PrivilegeRole.Contributor;
 
-				if (user.IsDownloader(privileges) && privileges != null && (privileges.DownloadableRoles == null || privileges.DownloadableRoles.Count < 1) && (privileges.DownloadableUsers == null || privileges.DownloadableUsers.Count < 1))
+				if (user.IsViewer(privileges))
 					return PrivilegeRole.Viewer;
-				else
+
+				if (user.IsDownloader(privileges))
 					return PrivilegeRole.Downloader;
 			}
-			return PrivilegeRole.Viewer;
+			return PrivilegeRole.None;
 		}
 
 		/// <summary>
@@ -433,43 +421,19 @@ namespace net.vieapps.Components.Security
 								Action.View,
 								Action.Download
 							}
-							: new List<Action>
-							{
-								Action.View,
-								Action.Download
-							};
+							: role.Equals(PrivilegeRole.Viewer)
+								? new List<Action>
+								{
+									Action.View,
+									Action.Download
+								}
+								: role.Equals(PrivilegeRole.Downloader)
+									? new List<Action>
+									{
+										Action.Download
+									}
+									: new List<Action>();
 
-		/// <summary>
-		/// Gets the default actions of the privilege role
-		/// </summary>
-		/// <param name="role">The privilege role (must matched with <see cref="PrivilegeRole">PrivilegeRole</see>)</param>
-		/// <returns></returns>
-		public static List<Action> GetActions(this string role)
-			=> (Enum.TryParse(role, out PrivilegeRole privilegeRole) ? privilegeRole : PrivilegeRole.Viewer).GetActions();
-
-		/// <summary>
-		/// Gets the actions of the privilege
-		/// </summary>
-		/// <param name="privilege">The privilege to perform an action on a specified object of a specified service</param>
-		/// <returns></returns>
-		public static List<Action> GetActions(this Privilege privilege)
-			=> privilege.Actions != null && privilege.Actions.Count > 0
-				? privilege.Actions.Select(action => Enum.TryParse(action, out Action a) ? a : Action.View).Distinct().ToList()
-				: (privilege.Role ?? "").GetActions();
-
-		/// <summary>
-		/// Gets the actions of the highest privilege
-		/// </summary>
-		/// <param name="user"></param>
-		/// <param name="privileges">The working privileges</param>
-		/// <returns></returns>
-		public static List<Action> GetActions(this IUser user, Privileges privileges)
-			=> user != null
-				? user.GetPrivilegeRole(privileges).GetActions()
-				: PrivilegeRole.Viewer.GetActions();
-		#endregion
-
-		#region Action-based authorizations of a specified service, object & privileges
 		/// <summary>
 		/// Determines the user can perform the action or not
 		/// </summary>
@@ -494,15 +458,23 @@ namespace net.vieapps.Components.Security
 				privileges = getPrivileges?.Invoke(user, serviceName, objectName) ?? new List<Privilege>();
 
 			var privilege = privileges.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals(objectName) && p.ObjectIdentity.IsEquals(objectIdentity));
+			if (privilege == null && !objectName.Equals("") && objectIdentity.Equals(""))
+				privilege = privileges.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals("") && p.ObjectIdentity.IsEquals(""));
 			if (privilege == null)
 				return false;
 
-			var fullAction = Action.Full.ToString();
-			var requestAction = action.ToString();
 			var actions = privilege.Actions != null && privilege.Actions.Count > 0
-				? privilege.Actions
-				: (getActions?.Invoke(privilege.Role.ToEnum<PrivilegeRole>()) ?? privilege.GetActions()).Select(a => a.ToString()).ToList();
-			return actions.FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
+				? privilege.Actions.Select(a => a.ToEnum<Action>()).ToList()
+				: null;
+			if (actions == null || actions.Count < 1)
+			{
+				var role = privilege.Role.ToEnum<PrivilegeRole>();
+				actions = getActions?.Invoke(role) ?? role.GetActions();
+			}
+
+			var full = Action.Full.ToString();
+			var act = action.ToString();
+			return actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(full) || a.Equals(act)) != null;
 		}
 
 		/// <summary>
@@ -516,16 +488,14 @@ namespace net.vieapps.Components.Security
 		{
 			if (user != null)
 			{
-				var fullAction = Action.Full.ToString();
-				var requestAction = action.ToString();
-				var actions = getActions?.Invoke(user.GetPrivilegeRole(privileges)) ?? user.GetActions(privileges);
-				var @is = actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
-				if (!@is && action.Equals(Action.Download) && privileges != null && (privileges.DownloadableRoles == null || privileges.DownloadableRoles.Count < 1) && (privileges.DownloadableUsers == null || privileges.DownloadableUsers.Count < 1))
-				{
-					requestAction = Action.View.ToString();
-					@is = actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(fullAction) || a.Equals(requestAction)) != null;
-				}
-				return @is;
+				var role = user.GetPrivilegeRole(privileges);
+				var actions = getActions?.Invoke(role) ?? role.GetActions();
+				if (action.Equals(Action.Download) && !user.IsDownloader(privileges))
+					actions = actions.Where(a => !a.Equals(Action.Download)).ToList();
+
+				var full = Action.Full.ToString();
+				var act = action.ToString();
+				return actions.Select(a => a.ToString()).FirstOrDefault(a => a.Equals(full) || a.Equals(act)) != null;
 			}
 			return false;
 		}
@@ -542,9 +512,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="getActions">The function to prepare the actions when the matched privilege got empty/null action</param>
 		/// <returns></returns>
 		public static bool IsAuthorized(this IUser user, string serviceName, string objectName, string objectIdentity, Action action, Privileges privileges, Func<IUser, string, string, List<Privilege>> getPrivileges, Func<PrivilegeRole, List<Action>> getActions)
-			=> user != null
-				? user.IsAuthorized(serviceName, objectName, objectIdentity, action, getPrivileges, getActions) || user.IsAuthorized(action, privileges, getActions)
-				: false;
+			=> user != null && (user.IsAuthorized(serviceName, objectName, objectIdentity, action, getPrivileges, getActions) || user.IsAuthorized(action, privileges, getActions));
 		#endregion
 
 		#region Privileges

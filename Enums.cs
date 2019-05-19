@@ -143,12 +143,12 @@ namespace net.vieapps.Components.Security
 		All,
 
 		/// <summary>
-		/// All kinds of users that are marked as signed-in account
+		/// All kinds of users that are marked as already authorized (means already signed/logged in)
 		/// </summary>
 		Authenticated,
 
 		/// <summary>
-		/// Signed-in accounts that mark as system administrator
+		/// Signed/Logged in accounts that mark as system administrator
 		/// </summary>
 		SystemAdministrator
 	}
@@ -161,6 +161,11 @@ namespace net.vieapps.Components.Security
 	[Serializable]
 	public enum PrivilegeRole
 	{
+		/// <summary>
+		/// Presents the working role that have no privilege on any resource
+		/// </summary>
+		None,
+
 		/// <summary>
 		/// Presents the working role that able to download files/attachments of the published resources
 		/// </summary>
