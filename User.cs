@@ -190,9 +190,6 @@ namespace net.vieapps.Components.Security
 		#region Role-based authorizations of a specified service & object
 		static bool IsOn(this IUser user, string serviceName, string objectName, PrivilegeRole role)
 		{
-			if (user == null)
-				return false;
-
 			serviceName = serviceName ?? "";
 			objectName = objectName ?? "";
 
@@ -330,10 +327,12 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsDownloader(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0) || (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
-			|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0) || (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
-			? user != null && (user.IsIn(privileges?.DownloadableRoles, privileges?.DownloadableUsers) || user.IsIn(parentPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableUsers))
-			: user != null && user.IsViewer(privileges, parentPrivileges);
+			=> user != null
+				? (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0) || (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
+				|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0) || (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
+					? user.IsIn(privileges?.DownloadableRoles, privileges?.DownloadableUsers) || user.IsIn(parentPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableUsers)
+					: user.IsViewer(privileges, parentPrivileges)
+				: false;
 		#endregion
 
 		#region Action-based authorizations of a specified service, object & privileges
@@ -516,6 +515,10 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Privileges
+		static bool IsEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+
+		static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users) => (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
+
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
 		/// </summary>
@@ -526,11 +529,9 @@ namespace net.vieapps.Components.Security
 			if (privileges == null)
 				return null;
 
-			bool isEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
-
 			var permissions = new Privileges();
 
-			if (isEmpty(privileges.DownloadableRoles, privileges.DownloadableUsers))
+			if (IsEmpty(privileges.DownloadableRoles, privileges.DownloadableUsers))
 				permissions.DownloadableRoles = permissions.DownloadableUsers = null;
 			else
 			{
@@ -538,7 +539,7 @@ namespace net.vieapps.Components.Security
 				permissions.DownloadableUsers = privileges.DownloadableUsers;
 			}
 
-			if (isEmpty(privileges.ViewableRoles, privileges.ViewableUsers))
+			if (IsEmpty(privileges.ViewableRoles, privileges.ViewableUsers))
 				permissions.ViewableRoles = permissions.ViewableUsers = null;
 			else
 			{
@@ -546,7 +547,7 @@ namespace net.vieapps.Components.Security
 				permissions.ViewableUsers = privileges.ViewableUsers;
 			}
 
-			if (isEmpty(privileges.ContributiveRoles, privileges.ContributiveUsers))
+			if (IsEmpty(privileges.ContributiveRoles, privileges.ContributiveUsers))
 				permissions.ContributiveRoles = permissions.ContributiveUsers = null;
 			else
 			{
@@ -554,7 +555,7 @@ namespace net.vieapps.Components.Security
 				permissions.ContributiveUsers = privileges.ContributiveUsers;
 			}
 
-			if (isEmpty(privileges.EditableRoles, privileges.EditableUsers))
+			if (IsEmpty(privileges.EditableRoles, privileges.EditableUsers))
 				permissions.EditableRoles = permissions.EditableUsers = null;
 			else
 			{
@@ -562,7 +563,7 @@ namespace net.vieapps.Components.Security
 				permissions.EditableUsers = privileges.EditableUsers;
 			}
 
-			if (isEmpty(privileges.ModerateRoles, privileges.ModerateUsers))
+			if (IsEmpty(privileges.ModerateRoles, privileges.ModerateUsers))
 				permissions.ModerateRoles = permissions.ModerateUsers = null;
 			else
 			{
@@ -570,7 +571,7 @@ namespace net.vieapps.Components.Security
 				permissions.ModerateUsers = privileges.ModerateUsers;
 			}
 
-			if (isEmpty(privileges.AdministrativeRoles, privileges.AdministrativeUsers))
+			if (IsEmpty(privileges.AdministrativeRoles, privileges.AdministrativeUsers))
 				permissions.AdministrativeRoles = permissions.AdministrativeUsers = null;
 			else
 			{
@@ -578,12 +579,12 @@ namespace net.vieapps.Components.Security
 				permissions.AdministrativeUsers = privileges.AdministrativeUsers;
 			}
 
-			if (isEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
-				&& isEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
-				&& isEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
-				&& isEmpty(permissions.EditableRoles, permissions.EditableUsers)
-				&& isEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
-				&& isEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
+			if (IsEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
+				&& IsEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
+				&& IsEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
+				&& IsEmpty(permissions.EditableRoles, permissions.EditableUsers)
+				&& IsEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
+				&& IsEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
 				permissions = null;
 
 			return permissions;
@@ -600,12 +601,9 @@ namespace net.vieapps.Components.Security
 			if (originalPrivileges == null && parentPrivileges == null)
 				return null;
 
-			bool isEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
-			bool isNotEmpty(HashSet<string> roles, HashSet<string> users) => (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
-
 			var permissions = new Privileges();
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.DownloadableRoles, originalPrivileges.DownloadableUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.DownloadableRoles, originalPrivileges.DownloadableUsers))
 			{
 				permissions.DownloadableRoles = originalPrivileges.DownloadableRoles;
 				permissions.DownloadableUsers = originalPrivileges.DownloadableUsers;
@@ -616,7 +614,7 @@ namespace net.vieapps.Components.Security
 				permissions.DownloadableUsers = parentPrivileges.DownloadableUsers;
 			}
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ViewableRoles, originalPrivileges.ViewableUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.ViewableRoles, originalPrivileges.ViewableUsers))
 			{
 				permissions.ViewableRoles = originalPrivileges.ViewableRoles;
 				permissions.ViewableUsers = originalPrivileges.ViewableUsers;
@@ -627,7 +625,7 @@ namespace net.vieapps.Components.Security
 				permissions.ViewableUsers = parentPrivileges.ViewableUsers;
 			}
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ContributiveRoles, originalPrivileges.ContributiveUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.ContributiveRoles, originalPrivileges.ContributiveUsers))
 			{
 				permissions.ContributiveRoles = originalPrivileges.ContributiveRoles;
 				permissions.ContributiveUsers = originalPrivileges.ContributiveUsers;
@@ -638,7 +636,7 @@ namespace net.vieapps.Components.Security
 				permissions.ContributiveUsers = parentPrivileges.ContributiveUsers;
 			}
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.EditableRoles, originalPrivileges.EditableUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.EditableRoles, originalPrivileges.EditableUsers))
 			{
 				permissions.EditableRoles = originalPrivileges.EditableRoles;
 				permissions.EditableUsers = originalPrivileges.EditableUsers;
@@ -649,7 +647,7 @@ namespace net.vieapps.Components.Security
 				permissions.EditableUsers = parentPrivileges.EditableUsers;
 			}
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.ModerateRoles, originalPrivileges.ModerateUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.ModerateRoles, originalPrivileges.ModerateUsers))
 			{
 				permissions.ModerateRoles = originalPrivileges.ModerateRoles;
 				permissions.ModerateUsers = originalPrivileges.ModerateUsers;
@@ -660,7 +658,7 @@ namespace net.vieapps.Components.Security
 				permissions.ModerateUsers = parentPrivileges.ModerateUsers;
 			}
 
-			if (originalPrivileges != null && isNotEmpty(originalPrivileges.AdministrativeRoles, originalPrivileges.AdministrativeUsers))
+			if (originalPrivileges != null && IsNotEmpty(originalPrivileges.AdministrativeRoles, originalPrivileges.AdministrativeUsers))
 			{
 				permissions.AdministrativeRoles = originalPrivileges.AdministrativeRoles;
 				permissions.AdministrativeUsers = originalPrivileges.AdministrativeUsers;
@@ -671,12 +669,12 @@ namespace net.vieapps.Components.Security
 				permissions.AdministrativeUsers = parentPrivileges.AdministrativeUsers;
 			}
 
-			if (isEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
-				&& isEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
-				&& isEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
-				&& isEmpty(permissions.EditableRoles, permissions.EditableUsers)
-				&& isEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
-				&& isEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
+			if (IsEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
+				&& IsEmpty(permissions.ViewableRoles, permissions.ViewableUsers)
+				&& IsEmpty(permissions.ContributiveRoles, permissions.ContributiveUsers)
+				&& IsEmpty(permissions.EditableRoles, permissions.EditableUsers)
+				&& IsEmpty(permissions.ModerateRoles, permissions.ModerateUsers)
+				&& IsEmpty(permissions.AdministrativeRoles, permissions.AdministrativeUsers))
 				permissions = null;
 
 			return permissions;
@@ -766,21 +764,12 @@ namespace net.vieapps.Components.Security
 				// return user identity
 				return user;
 			}
-			catch (TokenExpiredException)
-			{
-				throw;
-			}
-			catch (InvalidTokenSignatureException)
-			{
-				throw;
-			}
-			catch (InvalidTokenException)
-			{
-				throw;
-			}
 			catch (Exception ex)
 			{
-				throw new InvalidTokenException("Invalid authenticate token", ex);
+				if (ex is TokenExpiredException || ex is InvalidTokenSignatureException || ex is InvalidTokenException)
+					throw ex;
+				else
+					throw new InvalidTokenException("Invalid authenticate token", ex);
 			}
 		}
 		#endregion
@@ -899,21 +888,12 @@ namespace net.vieapps.Components.Security
 				// return user identity
 				return user;
 			}
-			catch (TokenExpiredException)
-			{
-				throw;
-			}
-			catch (InvalidTokenSignatureException)
-			{
-				throw;
-			}
-			catch (InvalidTokenException)
-			{
-				throw;
-			}
 			catch (Exception ex)
 			{
-				throw new InvalidTokenException("Invalid access token", ex);
+				if (ex is TokenExpiredException || ex is InvalidTokenSignatureException || ex is InvalidTokenException)
+					throw ex;
+				else
+					throw new InvalidTokenException("Invalid access token", ex);
 			}
 		}
 		#endregion
