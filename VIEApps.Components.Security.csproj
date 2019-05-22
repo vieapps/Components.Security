@@ -9,14 +9,14 @@
 		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
 		<SignAssembly>false</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
-		<AssemblyVersion>10.2.1905.2</AssemblyVersion>
-		<FileVersion>10.2.1905.2</FileVersion>
+		<AssemblyVersion>10.2.1906.1</AssemblyVersion>
+		<FileVersion>10.2.1906.1</FileVersion>
 		<InformationalVersion>v10.2.netstandard-2+rev:2019.05.19-all.authorizations</InformationalVersion>
 		<Product>VIEApps NGX</Product>
 		<Company>VIEApps.net</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<PackageId>VIEApps.Components.Security</PackageId>
-		<Version>10.2.1905.2</Version>
+		<Version>10.2.1906.1</Version>
 		<Title>VIEApps NGX User Security Base</Title>
 		<Description>User security base for developing apps on .NET Standard 2.0</Description>
 		<Authors>VIEApps.net</Authors>
@@ -25,8 +25,8 @@
 		<PackageOutputPath>..\</PackageOutputPath>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
 		<PackageReleaseNotes>Restructre: authorizations, extension methods</PackageReleaseNotes>
+		<PackageProjectUrl>https://vieapps.net/</PackageProjectUrl>
 		<PackageIconUrl>https://github.com/vieapps/Components.Utility/raw/master/logo.png</PackageIconUrl>
-		<PackageProjectUrl>https://github.com/vieapps/Components.Security</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 	</PropertyGroup>
 
@@ -39,7 +39,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.2.1905.2" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.2.1906.1" />
 	</ItemGroup>
 
 </Project>
