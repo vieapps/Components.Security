@@ -231,7 +231,7 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
 		public bool IsSystemAdministrator
-=> this.User.IsSystemAdministrator;
+			=> this.User.IsSystemAdministrator;
 
 		/// <summary>
 		/// Gets the collection of the system administrators
