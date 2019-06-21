@@ -1,5 +1,7 @@
 # VIEApps.Components.Security
-The general purpose user security base library for development apps on .NET Standard 2.0
+
+The general purpose user security base library for development apps with .NET Standard 2.x
+
 - Role-based security with System.Security.Claims
 - JSON Web Token
 - Access Token with privileges-based
