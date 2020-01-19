@@ -785,7 +785,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="roles">The collection that presents the roles that the user was belong to</param>
 		/// <param name="privileges">The collection that presents the access privileges that the user was got</param>
 		/// <param name="key">The key used to encrypt and sign</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="onPreCompleted">The action to run to modify playload (if needed) before the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>A JSON Web Token that presents the access token</returns>
 		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
@@ -832,13 +832,13 @@ namespace net.vieapps.Components.Security
 		}
 
 		/// <summary>
-		/// Parses the given access token and return an <see cref="User">UserIdentity</see> object
+		/// Parses the given access token and return an <see cref="User">User</see> object
 		/// </summary>
 		/// <param name="accessToken">The JSON Web Token that presents the access token</param>
 		/// <param name="key">The key used to decrypt and verify</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="onPreCompleted">The action to run to update user information (if needed) before the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
-		/// <returns>The <see cref="User">UserIdentity</see> object that presented by the access token</returns>
+		/// <returns>The <see cref="User">User</see> object that presented by the access token</returns>
 		public static User ParseAccessToken(this string accessToken, BigInteger key, Action<JObject, User> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			try
