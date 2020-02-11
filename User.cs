@@ -18,7 +18,7 @@ using net.vieapps.Components.Utility;
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
-	/// Presents information of an user in the VIEAPps NGX
+	/// Presents information of an user in the VIEApps NGX
 	/// </summary>
 	public interface IUser
 	{
@@ -517,9 +517,11 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Privileges
-		static bool IsEmpty(HashSet<string> roles, HashSet<string> users) => (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+		static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
+			=> (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
 
-		static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users) => (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
+		static bool IsNotEmpty(HashSet<string> roles, HashSet<string> users)
+			=> (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
 
 		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
@@ -593,7 +595,7 @@ namespace net.vieapps.Components.Security
 		}
 
 		/// <summary>
-		/// Combines the original permissions of a business entity with parent permissions
+		/// Combines the original permissions with parent permissions
 		/// </summary>
 		/// <param name="originalPrivileges"></param>
 		/// <param name="parentPrivileges"></param>
