@@ -31,7 +31,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Do some little code refactoring</PackageReleaseNotes>
+		<PackageReleaseNotes>Upgrade to latest components</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -47,7 +47,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(GeneratePackage)'!='true'">
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2003.2" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2003.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(GeneratePackage)'=='true'">
