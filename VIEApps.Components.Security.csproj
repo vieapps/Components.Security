@@ -2,14 +2,14 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
-		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<WarningLevel>3</WarningLevel>
 		<DocumentationFile>bin/$(Configuration)/$(TargetFramework)/VIEApps.Components.Security.xml</DocumentationFile>
+		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
 		<AssemblyVersion>10.3$(ReleaseVersion)</AssemblyVersion>
 		<FileVersion>10.3$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>10.3@$(TargetFramework)#sn:$(Sign)-$(ReleaseRevision)</InformationalVersion>
+		<InformationalVersion>10.3.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
 		<Version>10.3$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>VIEApps NGX</Product>
 		<Title>VIEApps NGX User Security Base</Title>
@@ -19,7 +19,7 @@
 		<Company>VIEApps.net</Company>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
 		<SignAssembly>$(Sign)</SignAssembly>
 		<AssemblyOriginatorKeyFile>../VIEApps.Components.snk</AssemblyOriginatorKeyFile>
 		<DefineConstants>$(SignConstant)</DefineConstants>
@@ -46,11 +46,11 @@
 		<None Visible="false" Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(GeneratePackage)'!='true'">
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2003.3" />
+	<ItemGroup Condition="'$(GeneratePackage)' != 'true'">
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2003.4" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(GeneratePackage)'=='true'">
+	<ItemGroup Condition="'$(GeneratePackage)' == 'true'">
 		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.3$(ReleaseVersion)" />
 	</ItemGroup>
 
