@@ -31,7 +31,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components</PackageReleaseNotes>
+		<PackageReleaseNotes>Improvement: upgrade to latest components</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -46,12 +46,9 @@
 		<None Visible="false" Include="Icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(GeneratePackage)' != 'true'">
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2003.4" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(GeneratePackage)' == 'true'">
-		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.3$(ReleaseVersion)" />
+	<ItemGroup>
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.3.2004.1" Condition="'$(GeneratePackage)' != 'true'" />
+		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.3$(ReleaseVersion)" Condition="'$(GeneratePackage)' == 'true'" />
 	</ItemGroup>
 
 </Project>
