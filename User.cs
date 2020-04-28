@@ -524,6 +524,20 @@ namespace net.vieapps.Components.Security
 			=> (roles != null && roles.Count > 0) || (users != null && users.Count > 0);
 
 		/// <summary>
+		/// Checks to see the privileges (access permissions) of a business entity is inherit from parent or not
+		/// </summary>
+		/// <param name="privileges"></param>
+		/// <returns></returns>
+		public static bool IsInheritFromParent(this Privileges privileges)
+			=> privileges == null
+				|| (IsEmpty(privileges.DownloadableRoles, privileges.DownloadableUsers)
+				&& IsEmpty(privileges.ViewableRoles, privileges.ViewableUsers)
+				&& IsEmpty(privileges.ContributiveRoles, privileges.ContributiveUsers)
+				&& IsEmpty(privileges.EditableRoles, privileges.EditableUsers)
+				&& IsEmpty(privileges.ModerateRoles, privileges.ModerateUsers)
+				&& IsEmpty(privileges.AdministrativeRoles, privileges.AdministrativeUsers));
+
+		/// <summary>
 		/// Normalizes the privileges (access permissions) of a business entity
 		/// </summary>
 		/// <param name="privileges"></param>

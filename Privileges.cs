@@ -1,7 +1,8 @@
 ﻿#region Related components
 using System;
+using System.Linq;
+using System.Dynamic;
 using System.Collections.Generic;
-
 using Newtonsoft.Json.Linq;
 using net.vieapps.Components.Utility;
 #endregion
@@ -120,83 +121,106 @@ namespace net.vieapps.Components.Security
 		/// <param name="anonymousCanView">true to allow anonymous can view by default</param>
 		public Privileges(bool anonymousCanView)
 		{
-			this.DownloadableRoles = new HashSet<string>();
-			this.DownloadableUsers = new HashSet<string>();
-			this.ViewableRoles = new HashSet<string>();
-			this.ViewableUsers = new HashSet<string>();
-			this.ContributiveRoles = new HashSet<string>();
-			this.ContributiveUsers = new HashSet<string>();
-			this.EditableRoles = new HashSet<string>();
-			this.EditableUsers = new HashSet<string>();
-			this.ModerateRoles = new HashSet<string>();
-			this.ModerateUsers = new HashSet<string>();
-			this.AdministrativeRoles = new HashSet<string>();
-			this.AdministrativeUsers = new HashSet<string>();
-
 			if (anonymousCanView)
 				this.ViewableRoles.Add(SystemRole.All.ToString());
 		}
 
+		/// <summary>
+		/// Initializes the privileges
+		/// </summary>
+		/// <param name="privileges">The object that contains the privileges</param>
+		public Privileges(JObject privileges)
+		{
+			if (privileges != null)
+				new[] { "Administrative", "Moderate", "Editable", "Contributive", "Viewable", "Downloadable" }.ForEach(name =>
+				{
+					var values = privileges.Get<JArray>($"{name}Roles");
+					if (values != null)
+						this.SetAttributeValue($"{name}Roles", new HashSet<string>(values.Select(value => value is JValue ? (value as JValue).Value as string : null).Where(value => value != null)));
+					values = privileges.Get<JArray>($"{name}Users");
+					if (values != null)
+						this.SetAttributeValue($"{name}Users", new HashSet<string>(values.Select(value => value is JValue ? (value as JValue).Value as string : null).Where(value => value != null)));
+				});
+		}
+
+		/// <summary>
+		/// Initializes the privileges
+		/// </summary>
+		/// <param name="privileges">The object that contains the privileges</param>
+		public Privileges(ExpandoObject privileges)
+		{
+			if (privileges != null)
+				new[] { "Administrative", "Moderate", "Editable", "Contributive", "Viewable", "Downloadable" }.ForEach(name =>
+				{
+					var values = privileges.Get<List<string>>($"{name}Roles");
+					if (values != null)
+						this.SetAttributeValue($"{name}Roles", new HashSet<string>(values.Where(value => !string.IsNullOrWhiteSpace(value))));
+					values = privileges.Get<List<string>>($"{name}Users");
+					if (values != null)
+						this.SetAttributeValue($"{name}Users", new HashSet<string>(values.Where(value => !string.IsNullOrWhiteSpace(value))));
+				});
+		}
+
 		#region Properties
-		/// <summary>
-		/// Gets or sets the collection of identity of working roles that able to download files/attachments of the published resources
-		/// </summary>
-		public HashSet<string> DownloadableRoles { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of users that able to download files/attachments of the published resources
-		/// </summary>
-		public HashSet<string> DownloadableUsers { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of working roles that able to view the details (means read-only on published resources)
-		/// </summary>
-		public HashSet<string> ViewableRoles { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of users that able to view the details (means read-only on published resources)
-		/// </summary>
-		public HashSet<string> ViewableUsers { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of working roles that able to contribute (means create new and view the published/their own resources)
-		/// </summary>
-		public HashSet<string> ContributiveRoles { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of users that able to contribute (means create new and view the published/their own resources)
-		/// </summary>
-		public HashSet<string> ContributiveUsers { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of working roles that able to edit (means create new and re-update the published resources)
-		/// </summary>
-		public HashSet<string> EditableRoles { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of users that able to edit (means create new and re-update the published resources)
-		/// </summary>
-		public HashSet<string> EditableUsers { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of working roles that able to moderate (means moderate all kinds of resources)
-		/// </summary>
-		public HashSet<string> ModerateRoles { get; set; }
-
-		/// <summary>
-		/// Gets or sets the collection of identity of users that able to moderate (means moderate all kinds of resources)
-		/// </summary>
-		public HashSet<string> ModerateUsers { get; set; }
-
 		/// <summary>
 		/// Gets or sets the collection of identity of working roles that able to manage (means full access)
 		/// </summary>
-		public HashSet<string> AdministrativeRoles { get; set; }
+		public HashSet<string> AdministrativeRoles { get; set; } = new HashSet<string>();
 
 		/// <summary>
 		/// Gets or sets the collection of identity of users that able to manage (means full access)
 		/// </summary>
-		public HashSet<string> AdministrativeUsers { get; set; }
+		public HashSet<string> AdministrativeUsers { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of working roles that able to moderate (means moderate all kinds of resources)
+		/// </summary>
+		public HashSet<string> ModerateRoles { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of users that able to moderate (means moderate all kinds of resources)
+		/// </summary>
+		public HashSet<string> ModerateUsers { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of working roles that able to edit (means create new and re-update the published resources)
+		/// </summary>
+		public HashSet<string> EditableRoles { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of users that able to edit (means create new and re-update the published resources)
+		/// </summary>
+		public HashSet<string> EditableUsers { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of working roles that able to contribute (means create new and view the published/their own resources)
+		/// </summary>
+		public HashSet<string> ContributiveRoles { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of users that able to contribute (means create new and view the published/their own resources)
+		/// </summary>
+		public HashSet<string> ContributiveUsers { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of working roles that able to view the details (means read-only on published resources)
+		/// </summary>
+		public HashSet<string> ViewableRoles { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of users that able to view the details (means read-only on published resources)
+		/// </summary>
+		public HashSet<string> ViewableUsers { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of working roles that able to download files/attachments of the published resources
+		/// </summary>
+		public HashSet<string> DownloadableRoles { get; set; } = new HashSet<string>();
+
+		/// <summary>
+		/// Gets or sets the collection of identity of users that able to download files/attachments of the published resources
+		/// </summary>
+		public HashSet<string> DownloadableUsers { get; set; } = new HashSet<string>();
 		#endregion
 
 	}
