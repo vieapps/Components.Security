@@ -33,7 +33,7 @@ namespace net.vieapps.Components.Security
 		string SessionID { get; set; }
 
 		/// <summary>
-		/// Gets or sets the working roles (means working roles of business services and special system roles)
+		/// Gets or sets the working roles (means working roles of services and system)
 		/// </summary>
 		List<string> Roles { get; set; }
 
@@ -53,12 +53,12 @@ namespace net.vieapps.Components.Security
 		bool IsAuthenticated { get; }
 
 		/// <summary>
-		/// Determines the user is system account
+		/// Determines the user is system account or not
 		/// </summary>
 		bool IsSystemAccount { get; }
 
 		/// <summary>
-		/// Determines the user is system administrator
+		/// Determines the user is system administrator or not
 		/// </summary>
 		bool IsSystemAdministrator { get; }
 
@@ -118,7 +118,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Gets the collection of the system administrators
 		/// </summary>
-		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToLower().ToHashSet());
+		public static HashSet<string> SystemAdministrators => User._SystemAdministrators ?? (User._SystemAdministrators = UtilityService.GetAppSetting("Users:SystemAdministrators", "").ToHashSet());
 
 		/// <summary>
 		/// Gets the default instance of an anonymous user
@@ -161,7 +161,7 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsAuthenticated => !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
+		public bool IsAuthenticated => string.IsNullOrWhiteSpace(this.ID) ? false : this.ID.IsValidUUID();
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
@@ -173,7 +173,7 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is system administrator
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsSystemAdministrator => this.IsSystemAccount || (this.IsAuthenticated && User.SystemAdministrators.Contains(this.ID.ToLower()));
+		public bool IsSystemAdministrator => (this.IsAuthenticated && User.SystemAdministrators.Contains(this.ID)) || this.IsSystemAccount;
 
 		/// <summary>
 		/// Determines whether this user belongs to the specified role or not
@@ -181,7 +181,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="role"></param>
 		/// <returns></returns>
 		public bool IsInRole(string role)
-			=> !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.FirstOrDefault(r => r.IsEquals(role)) != null;
+			=> string.IsNullOrWhiteSpace(role) || this.Roles == null ? false : this.Roles.IndexOf(role) > -1;
 		#endregion
 
 	}
@@ -820,7 +820,7 @@ namespace net.vieapps.Components.Security
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
 				{ "exp", DateTime.Now.AddDays(90).ToUnixTimestamp() },
-				{ "nbf", DateTime.Now.AddDays(-60).ToUnixTimestamp() },
+				{ "nbf", DateTime.Now.AddDays(-30).ToUnixTimestamp() },
 				{ "jti", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
 				{ "uid", userID },
 				{ "atk", publicKey.Encrypt(token, true) },
@@ -841,10 +841,8 @@ namespace net.vieapps.Components.Security
 		/// <returns>A JSON Web Token that presents the access token</returns>
 		public static string GetAccessToken(this User user, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
-			var roles = SystemRole.All.ToString()
-				+ (!user.ID.Equals("") ? "," + SystemRole.Authenticated.ToString() : "")
-				+ (user.IsSystemAdministrator ? "," + SystemRole.SystemAdministrator.ToString() : "");
-			return UserExtentions.GetAccessToken(user.ID, user.SessionID, (user.Roles ?? new List<string>()).Concat(roles.ToList()), user.Privileges, key, onPreCompleted, hashAlgorithm);
+			var roles = $"{SystemRole.All}{(user.ID.IsValidUUID() ? $",{SystemRole.Authenticated}" : "")}{(user.IsSystemAdministrator ? $",{SystemRole.SystemAdministrator}" : "")}";
+			return UserExtentions.GetAccessToken(user.ID, user.SessionID, roles.ToList().Concat(user.Roles ?? new List<string>()), user.Privileges, key, onPreCompleted, hashAlgorithm);
 		}
 
 		/// <summary>

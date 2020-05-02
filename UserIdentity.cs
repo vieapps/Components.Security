@@ -44,7 +44,7 @@ namespace net.vieapps.Components.Security
 			this.ID = userID;
 			this.SessionID = sessionID;
 			this.AuthenticationType = authenticationType ?? "APIs";
-			this.Roles = roles ?? new List<string>();
+			this.Roles = (roles ?? new List<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 			this.Privileges = privileges ?? new List<Privilege>();
 			this.BuildClaims();
 			this.BuildClaimsOfRolesAndPrivileges();
@@ -84,7 +84,7 @@ namespace net.vieapps.Components.Security
 				try
 				{
 					var info = userData.ToExpandoObject();
-					this.Roles = info.Get<List<string>>("Roles");
+					this.Roles = info.Get<List<string>>("Roles")?.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 					this.Privileges = info.Get<List<Privilege>>("Privileges");
 				}
 				catch { }
@@ -102,7 +102,7 @@ namespace net.vieapps.Components.Security
 			this.ID = user?.ID;
 			this.SessionID = user?.SessionID;
 			this.AuthenticationType = user?.AuthenticationType ?? "APIs";
-			this.Roles = user?.Roles ?? new List<string>();
+			this.Roles = (user?.Roles ?? new List<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 			this.Privileges = user?.Privileges ?? new List<Privilege>();
 			this.BuildClaims();
 			this.BuildClaimsOfRolesAndPrivileges();
@@ -222,13 +222,13 @@ namespace net.vieapps.Components.Security
 			=> this.User.IsAuthenticated;
 
 		/// <summary>
-		/// Gets the state that determines the user is system account
+		/// Gets the state that determines the user is system account or not
 		/// </summary>
 		public bool IsSystemAccount
 			=> this.User.IsSystemAccount;
 
 		/// <summary>
-		/// Gets the state that determines the user is system administrator
+		/// Gets the state that determines the user is system administrator or not
 		/// </summary>
 		public bool IsSystemAdministrator
 			=> this.User.IsSystemAdministrator;
