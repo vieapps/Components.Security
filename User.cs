@@ -707,9 +707,9 @@ namespace net.vieapps.Components.Security
 		/// <param name="sessionID">The string that presents identity of working session that associated with user</param>
 		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
 		/// <param name="signKey">The passphrase that used to sign the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="onCompleted">The action to run when the processing is completed</param>
 		/// <returns>A JSON Web Token that presents the authenticate token</returns>
-		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
+		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onCompleted = null)
 		{
 			var payload = new JObject
 			{
@@ -719,7 +719,7 @@ namespace net.vieapps.Components.Security
 				{ "aud", (string.IsNullOrWhiteSpace(userID) ? UtilityService.BlankUUID : userID).GetHMACBLAKE128(signKey) },
 				{ "uid", userID }
 			};
-			onPreCompleted?.Invoke(payload);
+			onCompleted?.Invoke(payload);
 			return JSONWebToken.Encode(payload, signKey);
 		}
 
@@ -729,10 +729,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="user">The identity of an user</param>
 		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
 		/// <param name="signKey">The passphrase that used to sign and verify the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="onCompleted">The action to run when the processing is completed</param>
 		/// <returns>A JSON Web Token that presents the authenticate token</returns>
-		public static string GetAuthenticateToken(this User user, string encryptionKey, string signKey, Action<JObject> onPreCompleted = null)
-			=> UserExtentions.GetAuthenticateToken(user.ID, user.SessionID, encryptionKey, signKey, onPreCompleted);
+		public static string GetAuthenticateToken(this User user, string encryptionKey, string signKey, Action<JObject> onCompleted = null)
+			=> UserExtentions.GetAuthenticateToken(user.ID, user.SessionID, encryptionKey, signKey, onCompleted);
 
 		/// <summary>
 		/// Parses the given authenticate token and return an <see cref="User">UserIdentity</see> object
@@ -740,9 +740,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
 		/// <param name="signKey">The passphrase that used to sign and verify the token</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="expiredAfter">The seconds that the token is expired (default is 60 seconds) </param>
+		/// <param name="onCompleted">The action to run when  the processing is completed</param>
 		/// <returns>The <see cref="User">UserIdentity</see> object that presented by the authenticate token</returns>
-		public static User ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string signKey, Action<JObject, User> onPreCompleted = null)
+		public static User ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string signKey, int expiredAfter = 0, Action<JObject, User> onCompleted = null)
 		{
 			try
 			{
@@ -750,9 +751,9 @@ namespace net.vieapps.Components.Security
 				var payload = JSONWebToken.DecodeAsJson(authenticateToken, signKey);
 				var token = payload.ToExpandoObject();
 
-				// issued at (expired after 60 seconds)
+				// issued at (expired after XXX seconds)
 				var issuedAt = token.Get<long>("iat");
-				if (DateTime.Now.ToUnixTimestamp() - issuedAt > 60)
+				if (DateTime.Now.ToUnixTimestamp() - issuedAt > (expiredAfter > 0 ? expiredAfter : 60))
 					throw new TokenExpiredException();
 
 				// identities
@@ -777,7 +778,7 @@ namespace net.vieapps.Components.Security
 				var user = new User(userID, sessionID, null, null);
 
 				// callback
-				onPreCompleted?.Invoke(payload, user);
+				onCompleted?.Invoke(payload, user);
 
 				// return user identity
 				return user;
@@ -801,10 +802,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="roles">The collection that presents the roles that the user was belong to</param>
 		/// <param name="privileges">The collection that presents the access privileges that the user was got</param>
 		/// <param name="key">The key used to encrypt and sign</param>
-		/// <param name="onPreCompleted">The action to run to modify playload (if needed) before the processing is completed</param>
+		/// <param name="onCompleted">The action to run to modify playload (if needed) when the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>A JSON Web Token that presents the access token</returns>
-		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			var token = new JObject
 			{
@@ -827,7 +828,7 @@ namespace net.vieapps.Components.Security
 				{ "ath", hash.ToHex() },
 				{ "sig", ECCsecp256k1.GetSignature(signature) }
 			};
-			onPreCompleted?.Invoke(payload);
+			onCompleted?.Invoke(payload);
 			return JSONWebToken.Encode(payload, ECCsecp256k1.GetPublicKey(publicKey).ToHex(), hashAlgorithm);
 		}
 
@@ -836,13 +837,13 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="user">The user identity</param>
 		/// <param name="key">The key used to encrypt and sign</param>
-		/// <param name="onPreCompleted">The action to run before the processing is completed</param>
+		/// <param name="onCompleted">The action to run when the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>A JSON Web Token that presents the access token</returns>
-		public static string GetAccessToken(this User user, BigInteger key, Action<JObject> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static string GetAccessToken(this User user, BigInteger key, Action<JObject> onCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			var roles = $"{SystemRole.All}{(user.ID.IsValidUUID() ? $",{SystemRole.Authenticated}" : "")}{(user.IsSystemAdministrator ? $",{SystemRole.SystemAdministrator}" : "")}";
-			return UserExtentions.GetAccessToken(user.ID, user.SessionID, roles.ToList().Concat(user.Roles ?? new List<string>()), user.Privileges, key, onPreCompleted, hashAlgorithm);
+			return UserExtentions.GetAccessToken(user.ID, user.SessionID, roles.ToList().Concat(user.Roles ?? new List<string>()), user.Privileges, key, onCompleted, hashAlgorithm);
 		}
 
 		/// <summary>
@@ -850,10 +851,10 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="accessToken">The JSON Web Token that presents the access token</param>
 		/// <param name="key">The key used to decrypt and verify</param>
-		/// <param name="onPreCompleted">The action to run to update user information (if needed) before the processing is completed</param>
+		/// <param name="onCompleted">The action to run to update user information (if needed) when the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>The <see cref="User">User</see> object that presented by the access token</returns>
-		public static User ParseAccessToken(this string accessToken, BigInteger key, Action<JObject, User> onPreCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static User ParseAccessToken(this string accessToken, BigInteger key, Action<JObject, User> onCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			try
 			{
@@ -899,7 +900,7 @@ namespace net.vieapps.Components.Security
 				var user = new User(userID, tokenID, roles, privileges);
 
 				// callback
-				onPreCompleted?.Invoke(payload, user);
+				onCompleted?.Invoke(payload, user);
 
 				// return user identity
 				return user;
