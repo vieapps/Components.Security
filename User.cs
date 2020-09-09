@@ -199,9 +199,7 @@ namespace net.vieapps.Components.Security
 			if (privilege == null && !objectName.Equals(""))
 				privilege = user.Privileges?.FirstOrDefault(p => p.ServiceName.IsEquals(serviceName) && p.ObjectName.IsEquals("") && p.ObjectIdentity.IsEquals(""));
 
-			return privilege != null
-				? privilege.Role.ToEnum<PrivilegeRole>().Equals(role)
-				: false;
+			return privilege != null && privilege.Role.ToEnum<PrivilegeRole>().Equals(role);
 		}
 
 		/// <summary>
@@ -268,8 +266,8 @@ namespace net.vieapps.Components.Security
 		#region Role-based authorizations of a specified privileges
 		static bool IsIn(this IUser user, HashSet<string> roles, HashSet<string> users)
 			=> string.IsNullOrWhiteSpace(user.ID)
-				? user.Roles == null || user.Roles.Count < 1 ? false : (roles == null || roles.Count < 1 ? false : roles.Intersect(user.Roles).Count() > 0)
-				: (users == null || users.Count < 1 ? false : users.Contains(user.ID)) || (user.Roles == null || user.Roles.Count < 1 ? false : (roles == null || roles.Count < 1 ? false : roles.Intersect(user.Roles).Count() > 0));
+				? user.Roles != null && user.Roles.Count > 0 && roles != null && roles.Count >= 1 && roles.Intersect(user.Roles).Count() > 0
+				: (users != null && users.Count >= 1 && users.Contains(user.ID)) || (user.Roles != null && user.Roles.Count >= 1 && roles != null && roles.Count >= 1 && roles.Intersect(user.Roles).Count() > 0);
 
 		/// <summary>
 		/// Determines the user is administrator or not (can manage or not)
