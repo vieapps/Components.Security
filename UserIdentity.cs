@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Security.Principal;
 using System.Security.Claims;
 using net.vieapps.Components.Utility;
 #endregion

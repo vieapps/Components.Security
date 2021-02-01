@@ -9,6 +9,11 @@ namespace net.vieapps.Components.Security
 	public enum Action
 	{
 		/// <summary>
+		/// Unknown (or Other) action
+		/// </summary>
+		Unknown,
+
+		/// <summary>
 		/// Creates (Contributes) an object
 		/// </summary>
 		Create,
