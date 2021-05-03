@@ -32,7 +32,7 @@
 		<PackageIcon>Icon.png</PackageIcon>
 		<PackageOutputPath>../</PackageOutputPath>
 		<PackageTags>security;utility;vieapps;vieapps.components</PackageTags>
-		<PackageReleaseNotes>Upgrade to latest components</PackageReleaseNotes>
+		<PackageReleaseNotes>Add more attributes to JWT</PackageReleaseNotes>
 		<PackageProjectUrl>https://vieapps.net</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/vieapps/Components.Security</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -48,7 +48,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.4.2104.1" Condition="'$(GeneratePackage)' != 'true'" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.4.2105.1" Condition="'$(GeneratePackage)' != 'true'" />
 		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.4$(ReleaseVersion)" Condition="'$(GeneratePackage)' == 'true'" />
 	</ItemGroup>
 

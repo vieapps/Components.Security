@@ -2,8 +2,6 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Security.Principal;
-using System.Security.Claims;
 using System.Xml.Serialization;
 using System.Numerics;
 using Newtonsoft.Json;
@@ -683,6 +681,8 @@ namespace net.vieapps.Components.Security
 			var payload = new JObject
 			{
 				{ "iat", DateTime.Now.ToUnixTimestamp() },
+				{ "exp", DateTime.Now.AddDays(90).ToUnixTimestamp() },
+				{ "nbf", DateTime.Now.AddDays(-30).ToUnixTimestamp() },
 				{ "jti", $"{userID}@{sessionID}".GetHMACBLAKE256(encryptionKey) },
 				{ "sid", sessionID.HexToBytes().Encrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex() },
 				{ "aud", (string.IsNullOrWhiteSpace(userID) ? UtilityService.BlankUUID : userID).GetHMACBLAKE128(signKey) },
@@ -709,7 +709,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="authenticateToken">The JSON Web Token that presents the authenticate token</param>
 		/// <param name="encryptionKey">The passphrase that used to generate the encryption key for decrypting data using AES</param>
 		/// <param name="signKey">The passphrase that used to sign and verify the token</param>
-		/// <param name="expiredAfter">The seconds that the token is expired (default is 60 seconds) </param>
+		/// <param name="expiredAfter">The seconds that the token is expired (default is 60 seconds - compares to 'issued at') </param>
 		/// <param name="onCompleted">The action to run when  the processing is completed</param>
 		/// <returns>The <see cref="User">UserIdentity</see> object that presented by the authenticate token</returns>
 		public static User ParseAuthenticateToken(this string authenticateToken, string encryptionKey, string signKey, int expiredAfter = 0, Action<JObject, User> onCompleted = null)
@@ -723,6 +723,16 @@ namespace net.vieapps.Components.Security
 				// issued at (expired after XXX seconds)
 				var issuedAt = token.Get<long>("iat");
 				if (DateTime.Now.ToUnixTimestamp() - issuedAt > (expiredAfter > 0 ? expiredAfter : 60))
+					throw new TokenExpiredException();
+
+				// not valid after
+				var expiresAt = token.Get<long?>("exp");
+				if (expiresAt != null && DateTime.Now > expiresAt.Value.FromUnixTimestamp())
+					throw new TokenExpiredException();
+
+				// not valid before
+				var notBefore = token.Get<long?>("nbf");
+				if (notBefore != null && DateTime.Now < notBefore.Value.FromUnixTimestamp())
 					throw new TokenExpiredException();
 
 				// identities
@@ -873,10 +883,20 @@ namespace net.vieapps.Components.Security
 				// return user identity
 				return user;
 			}
+			catch (TokenExpiredException)
+			{
+				throw;
+			}
+			catch (InvalidTokenSignatureException)
+			{
+				throw;
+			}
+			catch (InvalidTokenException)
+			{
+				throw;
+			}
 			catch (Exception ex)
 			{
-				if (ex is TokenExpiredException || ex is InvalidTokenSignatureException || ex is InvalidTokenException)
-					throw;
 				throw new InvalidTokenException("Invalid access token", ex);
 			}
 		}

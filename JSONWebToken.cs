@@ -47,7 +47,7 @@ namespace net.vieapps.Components.Security
 		{
 			var parts = !string.IsNullOrWhiteSpace(token)
 				? token.ToArray('.', true)
-				: new string[0];
+				: Array.Empty<string>();
 
 			if (parts.Length != 3)
 				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
