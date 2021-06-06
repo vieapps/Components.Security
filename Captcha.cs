@@ -41,9 +41,7 @@ namespace net.vieapps.Components.Security
 					return false;
 
 				var info = captchaCode.Decrypt(CaptchaService.EncryptionKey, true).ToArray('-');
-				return (DateTime.Now.ToUnixTimestamp() - info.First().CastAs<long>()) / 60 > 5
-					? false
-					: inputCode.Trim().IsEquals(info.Last());
+				return (DateTime.Now.ToUnixTimestamp() - info.First().CastAs<long>()) / 60 <= 5 && inputCode.Trim().IsEquals(info.Last());
 			}
 			catch
 			{
