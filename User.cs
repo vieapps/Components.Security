@@ -185,6 +185,11 @@ namespace net.vieapps.Components.Security
 
 	public static class UserExtentions
 	{
+		static HashSet<string> Combine(HashSet<string> original, HashSet<string> parent)
+		{
+			var set = original != null && original.Any() ? original : parent != null && parent.Any() ? parent : null;
+			return set != null && set.Any() ? new HashSet<string>(set) : null;
+		}
 
 		#region Role-based authorizations of a specified service & object
 		static bool IsOn(this IUser user, string serviceName, string objectName, PrivilegeRole role)
@@ -262,7 +267,7 @@ namespace net.vieapps.Components.Security
 
 		#region Role-based authorizations of a specified privileges
 		static bool IsIn(this IUser user, HashSet<string> roles, HashSet<string> users)
-			=> (users != null && users.Count >= 1 && !string.IsNullOrWhiteSpace(user.ID) && users.Contains(user.ID)) || (user.Roles != null && user.Roles.Count > 0 && roles != null && roles.Count >= 1 && roles.Intersect(user.Roles).Any());
+			=> (!string.IsNullOrWhiteSpace(user.ID) && users != null && users.Any() && users.Contains(user.ID)) || (roles != null && roles.Any() && user.Roles != null && user.Roles.Any() && roles.Intersect(user.Roles).Any());
 
 		/// <summary>
 		/// Determines the user is administrator or not (can manage or not)
@@ -272,7 +277,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsAdministrator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && user.IsIn(privileges?.AdministrativeRoles, privileges?.AdministrativeUsers) || user.IsIn(parentPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeUsers);
+			=> user != null && user.IsIn(Combine(privileges?.AdministrativeRoles, parentPrivileges?.AdministrativeRoles), Combine(privileges?.AdministrativeUsers, parentPrivileges?.AdministrativeUsers));
 
 		/// <summary>
 		/// Determines the user is moderator or not (can moderate or not)
@@ -282,7 +287,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsModerator(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && (user.IsIn(privileges?.ModerateRoles, privileges?.ModerateUsers) || user.IsIn(parentPrivileges?.ModerateRoles, parentPrivileges?.ModerateUsers) || user.IsAdministrator(privileges, parentPrivileges));
+			=> user != null && (user.IsIn(Combine(privileges?.ModerateRoles, parentPrivileges?.ModerateRoles), Combine(privileges?.ModerateUsers, parentPrivileges?.ModerateUsers)) || user.IsAdministrator(privileges, parentPrivileges));
 
 		/// <summary>
 		/// Determines the user is editor or not (can edit or not)
@@ -292,7 +297,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsEditor(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && (user.IsIn(privileges?.EditableRoles, privileges?.EditableUsers) || user.IsIn(parentPrivileges?.EditableRoles, parentPrivileges?.EditableUsers) || user.IsModerator(privileges, parentPrivileges));
+			=> user != null && (user.IsIn(Combine(privileges?.EditableRoles, parentPrivileges?.EditableRoles), Combine(privileges?.EditableUsers, parentPrivileges?.EditableUsers)) || user.IsModerator(privileges, parentPrivileges));
 
 		/// <summary>
 		/// Determines the user is contributor or not (can contribute or not)
@@ -302,7 +307,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsContributor(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && (user.IsIn(privileges?.ContributiveRoles, privileges?.ContributiveUsers) || user.IsIn(parentPrivileges?.ContributiveRoles, parentPrivileges?.ContributiveUsers) || user.IsEditor(privileges, parentPrivileges));
+			=> user != null && (user.IsIn(Combine(privileges?.ContributiveRoles, parentPrivileges?.ContributiveRoles), Combine(privileges?.ContributiveUsers, parentPrivileges?.ContributiveUsers)) || user.IsEditor(privileges, parentPrivileges));
 
 		/// <summary>
 		/// Determines the user is viewer or not (can view or not)
@@ -312,7 +317,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="parentPrivileges">The privileges of the parent object</param>
 		/// <returns></returns>
 		public static bool IsViewer(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
-			=> user != null && (user.IsIn(privileges?.ViewableRoles, privileges?.ViewableUsers) || user.IsIn(parentPrivileges?.ViewableRoles, parentPrivileges?.ViewableUsers) || user.IsContributor(privileges, parentPrivileges));
+			=> user != null && (user.IsIn(Combine(privileges?.ViewableRoles, parentPrivileges?.ViewableRoles), Combine(privileges?.ViewableUsers, parentPrivileges?.ViewableUsers)) || user.IsContributor(privileges, parentPrivileges));
 
 		/// <summary>
 		/// Determines the user is downloader or not (can download or not)
@@ -323,9 +328,9 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public static bool IsDownloader(this IUser user, Privileges privileges, Privileges parentPrivileges = null)
 			=> user != null
-				? (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Count > 0) || (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Count > 0)
-				|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Count > 0) || (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Count > 0)
-					? user.IsIn(privileges?.DownloadableRoles, privileges?.DownloadableUsers) || user.IsIn(parentPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableUsers)
+				? (privileges?.DownloadableRoles != null && privileges.DownloadableRoles.Any()) || (privileges?.DownloadableUsers != null && privileges.DownloadableUsers.Any())
+				|| (parentPrivileges?.DownloadableRoles != null && parentPrivileges.DownloadableRoles.Any()) || (parentPrivileges?.DownloadableUsers != null && parentPrivileges.DownloadableUsers.Any())
+					? user.IsIn(Combine(privileges?.DownloadableRoles, parentPrivileges?.DownloadableRoles), Combine(privileges?.DownloadableUsers, parentPrivileges?.DownloadableUsers))
 					: user.IsViewer(privileges, parentPrivileges)
 				: false;
 		#endregion
@@ -511,7 +516,7 @@ namespace net.vieapps.Components.Security
 
 		#region Privileges
 		static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
-			=> (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+			=> (roles == null || !roles.Any()) && (users == null || !users.Any());
 
 		/// <summary>
 		/// Checks to see the privileges (access permissions) of a business entity is inherit from parent or not
@@ -624,9 +629,6 @@ namespace net.vieapps.Components.Security
 			return permissions;
 		}
 
-		static HashSet<string> Concat(HashSet<string> original, HashSet<string> parent)
-			=> new HashSet<string>((original ?? new HashSet<string>()).Concat(parent ?? new HashSet<string>()));
-
 		/// <summary>
 		/// Combines the original permissions with parent permissions
 		/// </summary>
@@ -640,18 +642,18 @@ namespace net.vieapps.Components.Security
 
 			var permissions = new Privileges
 			{
-				DownloadableRoles = Concat(originalPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableRoles),
-				DownloadableUsers = Concat(originalPrivileges?.DownloadableUsers, parentPrivileges?.DownloadableUsers),
-				ViewableRoles = Concat(originalPrivileges?.ViewableRoles, parentPrivileges?.ViewableRoles),
-				ViewableUsers = Concat(originalPrivileges?.ViewableUsers, parentPrivileges?.ViewableUsers),
-				ContributiveRoles = Concat(originalPrivileges?.ContributiveRoles, parentPrivileges?.ContributiveRoles),
-				ContributiveUsers = Concat(originalPrivileges?.ContributiveUsers, parentPrivileges?.ContributiveUsers),
-				EditableRoles = Concat(originalPrivileges?.EditableRoles, parentPrivileges?.EditableRoles),
-				EditableUsers = Concat(originalPrivileges?.EditableUsers, parentPrivileges?.EditableUsers),
-				ModerateRoles = Concat(originalPrivileges?.ModerateRoles, parentPrivileges?.ModerateRoles),
-				ModerateUsers = Concat(originalPrivileges?.ModerateUsers, parentPrivileges?.ModerateUsers),
-				AdministrativeRoles = Concat(originalPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeRoles),
-				AdministrativeUsers = Concat(originalPrivileges?.AdministrativeUsers, parentPrivileges?.AdministrativeUsers)
+				DownloadableRoles = Combine(originalPrivileges?.DownloadableRoles, parentPrivileges?.DownloadableRoles),
+				DownloadableUsers = Combine(originalPrivileges?.DownloadableUsers, parentPrivileges?.DownloadableUsers),
+				ViewableRoles = Combine(originalPrivileges?.ViewableRoles, parentPrivileges?.ViewableRoles),
+				ViewableUsers = Combine(originalPrivileges?.ViewableUsers, parentPrivileges?.ViewableUsers),
+				ContributiveRoles = Combine(originalPrivileges?.ContributiveRoles, parentPrivileges?.ContributiveRoles),
+				ContributiveUsers = Combine(originalPrivileges?.ContributiveUsers, parentPrivileges?.ContributiveUsers),
+				EditableRoles = Combine(originalPrivileges?.EditableRoles, parentPrivileges?.EditableRoles),
+				EditableUsers = Combine(originalPrivileges?.EditableUsers, parentPrivileges?.EditableUsers),
+				ModerateRoles = Combine(originalPrivileges?.ModerateRoles, parentPrivileges?.ModerateRoles),
+				ModerateUsers = Combine(originalPrivileges?.ModerateUsers, parentPrivileges?.ModerateUsers),
+				AdministrativeRoles = Combine(originalPrivileges?.AdministrativeRoles, parentPrivileges?.AdministrativeRoles),
+				AdministrativeUsers = Combine(originalPrivileges?.AdministrativeUsers, parentPrivileges?.AdministrativeUsers)
 			};
 
 			if (IsEmpty(permissions.DownloadableRoles, permissions.DownloadableUsers)
