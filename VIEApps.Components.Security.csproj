@@ -48,7 +48,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.4.2108.1" Condition="'$(GeneratePackage)' != 'true'" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.4.2108.2" Condition="'$(GeneratePackage)' != 'true'" />
 		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.4$(ReleaseVersion)" Condition="'$(GeneratePackage)' == 'true'" />
 	</ItemGroup>
 
