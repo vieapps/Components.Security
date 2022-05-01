@@ -1,8 +1,5 @@
-#region Related components
 using System;
 using net.vieapps.Components.Utility;
-#endregion
-
 namespace net.vieapps.Components.Security
 {
 	/// <summary>
