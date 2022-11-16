@@ -158,13 +158,13 @@ namespace net.vieapps.Components.Security
 		/// Gets the state that determines the user is authenticated or not
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsAuthenticated => string.IsNullOrWhiteSpace(this.ID) ? false : this.ID.IsValidUUID();
+		public bool IsAuthenticated => !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
 
 		/// <summary>
 		/// Gets the state that determines the user is system account
 		/// </summary>
 		[JsonIgnore, XmlIgnore]
-		public bool IsSystemAccount => this.IsAuthenticated ? this.ID.IsEquals(User.SystemAccountID) : false;
+		public bool IsSystemAccount => this.IsAuthenticated && this.ID.IsEquals(User.SystemAccountID);
 
 		/// <summary>
 		/// Gets the state that determines the user is system administrator
@@ -178,7 +178,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="role"></param>
 		/// <returns></returns>
 		public bool IsInRole(string role)
-			=> string.IsNullOrWhiteSpace(role) || this.Roles == null ? false : this.Roles.IndexOf(role) > -1;
+			=> !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.IndexOf(role) > -1;
 		#endregion
 
 	}
