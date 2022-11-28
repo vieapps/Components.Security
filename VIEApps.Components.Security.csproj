@@ -8,10 +8,10 @@
 		<RootNamespace>net.vieapps.Components.Security</RootNamespace>
 		<AssemblyName>VIEApps.Components.Security</AssemblyName>
 		<AssemblyTitle>VIEApps NGX User Security Base</AssemblyTitle>
-		<AssemblyVersion>10.6$(ReleaseVersion)</AssemblyVersion>
-		<FileVersion>10.6$(ReleaseVersion)</FileVersion>
-		<InformationalVersion>10.6.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
-		<Version>10.6$(ReleaseVersion)$(ReleaseSuffix)</Version>
+		<AssemblyVersion>10.7$(ReleaseVersion)</AssemblyVersion>
+		<FileVersion>10.7$(ReleaseVersion)</FileVersion>
+		<InformationalVersion>10.7.$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day)@$(TargetFramework)#sn:$(Sign)#$(ReleaseRevision)</InformationalVersion>
+		<Version>10.7$(ReleaseVersion)$(ReleaseSuffix)</Version>
 		<Product>VIEApps NGX</Product>
 		<Title>VIEApps NGX User Security Base</Title>
 		<Description>User security base for developing apps with .NET</Description>
@@ -48,8 +48,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="VIEApps.Components.Utility" Version="10.6.2211.1" Condition="'$(GeneratePackage)' != 'true'" />
-		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.6$(ReleaseVersion)" Condition="'$(GeneratePackage)' == 'true'" />
+		<PackageReference Include="VIEApps.Components.Utility" Version="10.7.2211.1" Condition="'$(GeneratePackage)' != 'true'" />
+		<PackageReference Include="VIEApps.Components.Utility$(PackageSuffix)" Version="10.7$(ReleaseVersion)" Condition="'$(GeneratePackage)' == 'true'" />
 	</ItemGroup>
 
 </Project>
