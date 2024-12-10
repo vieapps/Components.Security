@@ -15,7 +15,9 @@ namespace net.vieapps.Components.Security
 
 		public InvalidSessionException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public InvalidSessionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -27,7 +29,9 @@ namespace net.vieapps.Components.Security
 
 		public SessionNotFoundException(string message, Exception innerException) : base (message, innerException) { }
 
+#if NETSTANDARD2_0
 		public SessionNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -41,7 +45,9 @@ namespace net.vieapps.Components.Security
 
 		public SessionInformationRequiredException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public SessionInformationRequiredException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -53,7 +59,9 @@ namespace net.vieapps.Components.Security
 
 		public SessionExpiredException(string message, Exception innerException) : base (message, innerException) { }
 
+#if NETSTANDARD2_0
 		public SessionExpiredException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -67,7 +75,9 @@ namespace net.vieapps.Components.Security
 
 		public InvalidTokenException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public InvalidTokenException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -79,7 +89,9 @@ namespace net.vieapps.Components.Security
 
 		public TokenNotFoundException(string message, Exception innerException) : base (message, innerException) { }
 
+#if NETSTANDARD2_0
 		public TokenNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -93,7 +105,9 @@ namespace net.vieapps.Components.Security
 
 		public TokenExpiredException(Exception innerException) : base("Token is expired", innerException) { }
 
+#if NETSTANDARD2_0
 		public TokenExpiredException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -107,7 +121,9 @@ namespace net.vieapps.Components.Security
 
 		public TokenRevokedException(Exception innerException) : base("The access token has been revoked", innerException) { }
 
+#if NETSTANDARD2_0
 		public TokenRevokedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -121,7 +137,9 @@ namespace net.vieapps.Components.Security
 
 		public InvalidTokenSignatureException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public InvalidTokenSignatureException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -133,7 +151,9 @@ namespace net.vieapps.Components.Security
 
 		public UnauthorizedException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public UnauthorizedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -145,7 +165,9 @@ namespace net.vieapps.Components.Security
 
 		public AccessDeniedException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public AccessDeniedException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -159,7 +181,9 @@ namespace net.vieapps.Components.Security
 
 		public WrongAccountException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public WrongAccountException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -173,7 +197,9 @@ namespace net.vieapps.Components.Security
 
 		public InvalidActivateInformationException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public InvalidActivateInformationException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 	[Serializable]
@@ -187,7 +213,9 @@ namespace net.vieapps.Components.Security
 
 		public ActivateInformationExpiredException(string message, Exception innerException) : base(message, innerException) { }
 
+#if NETSTANDARD2_0
 		public ActivateInformationExpiredException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#endif
 	}
 
 }
