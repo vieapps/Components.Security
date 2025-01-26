@@ -724,7 +724,7 @@ namespace net.vieapps.Components.Security
 
 				// issued at (expired after XXX seconds)
 				var issuedAt = token.Get<long>("iat");
-				if (DateTime.Now.ToUnixTimestamp() - issuedAt > (expiredAfter > 0 ? expiredAfter : 60))
+				if (DateTime.Now.ToUnixTimestamp() - issuedAt > (expiredAfter > 0 ? expiredAfter : 300))
 					throw new TokenExpiredException();
 
 				// not valid after
