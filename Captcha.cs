@@ -20,24 +20,26 @@ namespace net.vieapps.Components.Security
 		/// Generates new code of the captcha
 		/// </summary>
 		/// <param name="salt">The string to use as salt</param>
+		/// <param name="key">The string to use as pass-phrase to encrypt code by AES</param>
 		/// <returns>The encrypted string that contains code of captcha</returns>
-		public static string GenerateCode(string salt = null)
-			=> $"{DateTime.Now.ToUnixTimestamp()}-{salt ?? UtilityService.NewUUID.Left(13)}-{CaptchaService.GenerateRandomCode()}".Encrypt(CaptchaService.EncryptionKey, true);
+		public static string GenerateCode(string salt = null, string key = null)
+			=> $"{DateTime.Now.ToUnixTimestamp()}-{salt ?? UtilityService.NewUUID.Left(13)}-{CaptchaService.GenerateRandomCode()}".Encrypt(key ?? CaptchaService.EncryptionKey, true);
 
 		/// <summary>
 		/// Validates captcha code
 		/// </summary>
 		/// <param name="captchaCode">The string that presents encrypted code</param>
 		/// <param name="inputCode">The code that inputed by user</param>
+		/// <param name="key">The string to use as pass-phrase to decrypt code by AES</param>
 		/// <returns>true if valid</returns>
-		public static bool IsCodeValid(string captchaCode, string inputCode)
+		public static bool IsCodeValid(string captchaCode, string inputCode, string key = null)
 		{
 			try
 			{
 				if (string.IsNullOrWhiteSpace(captchaCode) || string.IsNullOrWhiteSpace(inputCode))
 					return false;
 
-				var info = captchaCode.Decrypt(CaptchaService.EncryptionKey, true).ToArray('-');
+				var info = captchaCode.Decrypt(key ?? CaptchaService.EncryptionKey, true).ToArray('-');
 				return (DateTime.Now.ToUnixTimestamp() - info.First().CastAs<long>()) / 60 <= 5 && inputCode.Trim().IsEquals(info.Last());
 			}
 			catch

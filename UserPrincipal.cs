@@ -1,6 +1,7 @@
 ﻿#region Related components
-using System.Security.Principal;
+using System.Collections.Generic;
 using System.Security.Claims;
+using System.Security.Principal;
 #endregion
 
 namespace net.vieapps.Components.Security
@@ -13,37 +14,32 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes the new instance of an user principal from the specified identity
 		/// </summary>
-		public UserPrincipal()
-			: this(new UserIdentity()) { }
+		public UserPrincipal() : this(new UserIdentity()) { }
 
 		/// <summary>
 		/// Initializes the new instance of an user principal from the specified identity
 		/// </summary>
 		/// <param name="user">The identity from which to initialize the new principal</param>
-		public UserPrincipal(IUser user)
-			: this(new UserIdentity(user)) { }
+		public UserPrincipal(IUser user) : this(new UserIdentity(user)) { }
 
 		/// <summary>
 		/// Initializes the new instance of an user principal from the specified identity
 		/// </summary>
 		/// <param name="identity">The identity from which to initialize the new principal</param>
-		public UserPrincipal(UserIdentity identity)
-			: base(identity)
+		public UserPrincipal(UserIdentity identity)	: base(identity)
 			=> this.Identity = identity ?? new UserIdentity();
 
 		/// <summary>
 		/// Initializes the new instance of an user principal
 		/// </summary>
 		/// <param name="principal">The principal from which to initialize the new principal</param>
-		public UserPrincipal(ClaimsPrincipal principal)
-			: base(principal)
+		public UserPrincipal(ClaimsPrincipal principal)	: base(principal)
 			=> this.Identity = new UserIdentity(principal);
 
 		/// <summary>
 		/// Gets the current principal
 		/// </summary>
-		public static new UserPrincipal Current
-			=> new UserPrincipal(ClaimsPrincipal.Current);
+		public static new UserPrincipal Current	=> new UserPrincipal(ClaimsPrincipal.Current);
 
 		/// <summary>
 		/// Gets the identity that associated with this principal
@@ -69,5 +65,13 @@ namespace net.vieapps.Components.Security
 		/// <returns></returns>
 		public override bool IsInRole(string role)
 			=> this.Identity != null && (this.Identity as UserIdentity).IsInRole(role);
+
+		/// <summary>
+		/// Determines whether the current principal belongs to the specified role
+		/// </summary>
+		/// <param name="roles"></param>
+		/// <returns></returns>
+		public bool IsInRoles(IEnumerable<string> roles)
+			=> this.Identity != null && (this.Identity as UserIdentity).IsInRoles(roles);
 	}
 }

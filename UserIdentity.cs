@@ -16,8 +16,7 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with the specified authentication type
 		/// </summary>
-		public UserIdentity()
-			: base()
+		public UserIdentity() : base()
 			=> this.SetUser();
 
 		/// <summary>
@@ -26,8 +25,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string sessionID, string authenticationType = null)
-			: this(userID, sessionID, null, null, authenticationType)
+		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType)
 			=> this.SetUser();
 
 		/// <summary>
@@ -54,16 +52,14 @@ namespace net.vieapps.Components.Security
 		/// Initializes a new instance of the UserIdentity class with an associated principal
 		/// </summary>
 		/// <param name="principal">The user principal</param>
-		public UserIdentity(ClaimsPrincipal principal)
-			: this(principal?.Claims)
+		public UserIdentity(ClaimsPrincipal principal) : this(principal?.Claims)
 			=> this.SetUser();
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with an associated identity
 		/// </summary>
 		/// <param name="identity">The user identity</param>
-		public UserIdentity(ClaimsIdentity identity)
-			: this(identity?.Claims)
+		public UserIdentity(ClaimsIdentity identity) : this(identity?.Claims)
 			=> this.SetUser();
 
 		/// <summary>
@@ -206,6 +202,21 @@ namespace net.vieapps.Components.Security
 		}
 		#endregion
 
+		public override bool IsAuthenticated => this.User.IsAuthenticated;
+
+		public bool IsSystemAccount	=> this.User.IsSystemAccount;
+
+		public bool IsSystemAdministrator => this.User.IsSystemAdministrator;
+
+		public bool IsInRole(string role) => this.User.IsInRole(role);
+
+		public bool IsInRoles(IEnumerable<string> roles) => this.User.IsInRoles(roles);
+
+		/// <summary>
+		/// Gets the collection of the system administrators
+		/// </summary>
+		public static HashSet<string> SystemAdministrators => User.SystemAdministrators;
+
 		/// <summary>
 		/// Gets the user object that related to this identity
 		/// </summary>
@@ -213,37 +224,5 @@ namespace net.vieapps.Components.Security
 
 		void SetUser()
 			=> this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
-
-		/// <summary>
-		/// Gets the state that determines the user is authenticated or not
-		/// </summary>
-		public override bool IsAuthenticated
-			=> this.User.IsAuthenticated;
-
-		/// <summary>
-		/// Gets the state that determines the user is system account or not
-		/// </summary>
-		public bool IsSystemAccount
-			=> this.User.IsSystemAccount;
-
-		/// <summary>
-		/// Gets the state that determines the user is system administrator or not
-		/// </summary>
-		public bool IsSystemAdministrator
-			=> this.User.IsSystemAdministrator;
-
-		/// <summary>
-		/// Gets the collection of the system administrators
-		/// </summary>
-		public static HashSet<string> SystemAdministrators
-			=> User.SystemAdministrators;
-
-		/// <summary>
-		/// Determines whether this user belongs to the specified role or not
-		/// </summary>
-		/// <param name="role"></param>
-		/// <returns></returns>
-		public bool IsInRole(string role)
-			=> this.User.IsInRole(role);
 	}
 }

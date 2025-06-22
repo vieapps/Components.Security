@@ -1,9 +1,9 @@
 ﻿#region Related components
 using System;
 using System.Linq;
+using System.Numerics;
 using System.Collections.Generic;
 using System.Xml.Serialization;
-using System.Numerics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using net.vieapps.Components.Utility;
@@ -66,6 +66,13 @@ namespace net.vieapps.Components.Security
 		/// <param name="role">The role need to check</param>
 		/// <returns></returns>
 		bool IsInRole(string role);
+
+		/// <summary>
+		/// Determines whether this user belongs to the specified roles or not
+		/// </summary>
+		/// <param name="roles">The roles need to check</param>
+		/// <returns></returns>
+		bool IsInRoles(IEnumerable<string> roles);
 	}
 
 	/// <summary>
@@ -76,15 +83,13 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the User class
 		/// </summary>
-		public User()
-			: this(null, null, null, null) { }
+		public User()	: this(null, null, null, null) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="user">The identity of user</param>
-		public User(IUser user)
-			: this(user?.ID, user?.SessionID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
+		public User(IUser user)	: this(user?.ID, user?.SessionID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the User class
@@ -127,71 +132,49 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Properties
-		/// <summary>
-		/// Gets or sets identity of user
-		/// </summary>
 		public string ID { get; set; }
 
-		/// <summary>
-		/// Gets or sets identity of working session
-		/// </summary>
 		public string SessionID { get; set; }
 
-		/// <summary>
-		/// Gets or sets the working roles (means working roles of business services and special system roles)
-		/// </summary>
 		public List<string> Roles { get; set; } = new List<string>();
 
-		/// <summary>
-		/// Gets or sets the working privileges (means scopes/working privileges of services/services' objects)
-		/// </summary>
 		public List<Privilege> Privileges { get; set; } = new List<Privilege>();
 
-		/// <summary>
-		/// Gets the authentication type
-		/// </summary>
 		public string AuthenticationType { get; set; } = "APIs";
 		#endregion
 
 		#region Authentication & Authorization
-		/// <summary>
-		/// Gets the state that determines the user is authenticated or not
-		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public bool IsAuthenticated => !string.IsNullOrWhiteSpace(this.ID) && this.ID.IsValidUUID();
 
-		/// <summary>
-		/// Gets the state that determines the user is system account
-		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public bool IsSystemAccount => this.IsAuthenticated && this.ID.IsEquals(User.SystemAccountID);
 
-		/// <summary>
-		/// Gets the state that determines the user is system administrator
-		/// </summary>
 		[JsonIgnore, XmlIgnore]
 		public bool IsSystemAdministrator => (this.IsAuthenticated && User.SystemAdministrators.Contains(this.ID)) || this.IsSystemAccount;
 
-		/// <summary>
-		/// Determines whether this user belongs to the specified role or not
-		/// </summary>
-		/// <param name="role"></param>
-		/// <returns></returns>
 		public bool IsInRole(string role)
 			=> !string.IsNullOrWhiteSpace(role) && this.Roles != null && this.Roles.IndexOf(role) > -1;
+
+		public bool IsInRoles(IEnumerable<string> roles)
+			=> roles != null && (this.Roles ?? new List<string>()).Intersect(roles).Any();
 		#endregion
 
 	}
 
 	public static class UserExtentions
 	{
+
+		#region Helper methods
 		static HashSet<string> Combine(HashSet<string> original, HashSet<string> parent)
 		{
-			var set = original != null && original.Any() ? original : parent != null && parent.Any() ? parent : null;
-			return set != null && set.Any() ? new HashSet<string>(set) : null;
+			var set = original != null && original.Count > 0 ? original : parent != null && parent.Count > 0 ? parent : null;
+			return set != null && set.Count > 0 ? set : null;
 		}
 
-		#region Role-based authorizations of a specified service & object
+		static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
+			=> (roles == null || roles.Count < 1) && (users == null || users.Count < 1);
+
 		static bool IsOn(this IUser user, string serviceName, string objectName, PrivilegeRole role)
 		{
 			serviceName = serviceName ?? "";
@@ -204,6 +187,11 @@ namespace net.vieapps.Components.Security
 			return privilege != null && privilege.Role.ToEnum<PrivilegeRole>().Equals(role);
 		}
 
+		static bool IsIn(this IUser user, HashSet<string> roles, HashSet<string> users)
+			=> user.IsInRoles(roles) || (users ?? new HashSet<string>()).Contains(user.ID);
+		#endregion
+
+		#region Role-based authorizations of a specified service & object
 		/// <summary>
 		/// Determines the user is administrator or not (can manage or not)
 		/// </summary>
@@ -266,9 +254,6 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Role-based authorizations of a specified privileges
-		static bool IsIn(this IUser user, HashSet<string> roles, HashSet<string> users)
-			=> (!string.IsNullOrWhiteSpace(user.ID) && users != null && users.Any() && users.Contains(user.ID)) || (roles != null && roles.Any() && user.Roles != null && user.Roles.Any() && roles.Intersect(user.Roles).Any());
-
 		/// <summary>
 		/// Determines the user is administrator or not (can manage or not)
 		/// </summary>
@@ -515,9 +500,6 @@ namespace net.vieapps.Components.Security
 		#endregion
 
 		#region Privileges
-		static bool IsEmpty(HashSet<string> roles, HashSet<string> users)
-			=> (roles == null || !roles.Any()) && (users == null || !users.Any());
-
 		/// <summary>
 		/// Checks to see the privileges (access permissions) of a business entity is inherit from parent or not
 		/// </summary>
