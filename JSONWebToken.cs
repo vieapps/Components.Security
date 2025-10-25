@@ -41,19 +41,33 @@ namespace net.vieapps.Components.Security
 		/// <param name="token">The JSON Web Token</param>
 		/// <param name="key">The key that were used to sign the JSON Web Token</param>
 		/// <param name="verify">Whether to verify the signature</param>
+		/// <param name="tracker">Process tracking function</param>
 		/// <returns>A string that representing the payload</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
-		public static string Decode(string token, string key, bool verify = true)
+		public static string Decode(string token, string key, bool verify = true, Action<string, Exception> tracker = null)
 		{
 			var parts = !string.IsNullOrWhiteSpace(token)
 				? token.ToArray('.', true)
 				: Array.Empty<string>();
 
 			if (parts.Length != 3)
-				throw new InvalidTokenException("The token must consists from 3 delimited by dot parts");
+			{
+				var ex = new InvalidTokenException("The token must consists from 3 delimited by dot parts");
+				tracker?.Invoke(ex.Message, ex);
+				throw ex;
+			}
 
-			if (verify && !parts[2].Equals($"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, parts[0].FromBase64Url().ToExpandoObject().Get("alg", "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true)))
-				throw new InvalidTokenSignatureException();
+			if (verify)
+			{
+				var actualKey = parts[2];
+				var computeKey = $"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, parts[0].FromBase64Url().ToExpandoObject().Get("alg", "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true);
+				if (!actualKey.Equals(computeKey))
+				{
+					var ex = new InvalidTokenSignatureException($"Token signature is invalid => {actualKey} != {computeKey}");
+					tracker?.Invoke(ex.Message, ex);
+					throw ex;
+				}
+			}
 
 			return parts[1].FromBase64Url();
 		}
@@ -64,9 +78,10 @@ namespace net.vieapps.Components.Security
 		/// <param name="token">The JSON Web Token</param>
 		/// <param name="key">The key that were used to sign the JSON Web Token</param>
 		/// <param name="verify">Whether to verify the signature</param>
+		/// <param name="tracker">Process tracking function</param>
 		/// <returns>An <see cref="JObject">JObject</see> object that representing the payload</returns>
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
-		public static JObject DecodeAsJson(string token, string key, bool verify = true)
-			=> JObject.Parse(JSONWebToken.Decode(token, key, verify));
+		public static JObject DecodeAsJson(string token, string key, bool verify = true, Action<string, Exception> tracker = null)
+			=> JObject.Parse(JSONWebToken.Decode(token, key, verify, tracker));
 	}
 }
