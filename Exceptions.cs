@@ -1,5 +1,7 @@
 using System;
+#if NETSTANDARD2_0
 using System.Runtime.Serialization;
+#endif
 using net.vieapps.Components.Utility;
 
 namespace net.vieapps.Components.Security

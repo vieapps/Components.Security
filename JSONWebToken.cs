@@ -22,16 +22,17 @@ namespace net.vieapps.Components.Security
 		/// <returns>The string that presents a JSON Web Token</returns>
 		public static string Encode(JObject payload, string key, string hashAlgorithm = null)
 		{
+			hashAlgorithm = hashAlgorithm ?? "SHA256";
 			var segments = new List<string>
 			{
 				new Dictionary<string, string>
 				{
 					{ "typ", "JWT" },
-					{ "alg", (hashAlgorithm ?? "SHA256").Replace(StringComparison.OrdinalIgnoreCase, "sha", "hs") }
+					{ "alg", hashAlgorithm.Replace(StringComparison.OrdinalIgnoreCase, "SHA", "HS") }
 				}.ToJson().ToString(Formatting.None).ToBase64Url(),
 				(payload ?? new JObject()).ToString(Formatting.None).ToBase64Url()
 			};
-			segments.Add(segments.Join(".").GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm ?? "SHA256", false).ToBase64Url(true));
+			segments.Add(segments.Join(".").GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm, false).ToBase64Url(true));
 			return segments.Join(".");
 		}
 
@@ -46,24 +47,22 @@ namespace net.vieapps.Components.Security
 		/// <exception cref="InvalidTokenSignatureException">Thrown if the verify parameter was true and the signature was NOT valid or if the JWT was signed with an unsupported algorithm</exception>
 		public static string Decode(string token, string key, bool verify = true, Action<string, Exception> tracker = null)
 		{
-			var parts = !string.IsNullOrWhiteSpace(token)
-				? token.ToArray('.', true)
-				: Array.Empty<string>();
-
+			var parts = string.IsNullOrWhiteSpace(token) ? Array.Empty<string>() : token.ToArray('.', true);
 			if (parts.Length != 3)
 			{
-				var ex = new InvalidTokenException("The token must consists from 3 delimited by dot parts");
+				var ex = new InvalidTokenException("JWT must consists from 3 delimited by dot parts");
 				tracker?.Invoke(ex.Message, ex);
 				throw ex;
 			}
 
 			if (verify)
 			{
+				var hashAlgorithm = parts[0].FromBase64Url().ToJson().Get("alg", "HS256").Replace(StringComparison.OrdinalIgnoreCase, "HS", "SHA");
 				var actualKey = parts[2];
-				var computeKey = $"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, parts[0].FromBase64Url().ToExpandoObject().Get("alg", "hs256").Replace(StringComparison.OrdinalIgnoreCase, "hs", "sha"), false).ToBase64Url(true);
+				var computeKey = $"{parts[0]}.{parts[1]}".GetHMAC(key ?? CryptoService.DEFAULT_PASS_PHRASE, hashAlgorithm, false).ToBase64Url(true);
 				if (!actualKey.Equals(computeKey))
 				{
-					var ex = new InvalidTokenSignatureException($"Token signature is invalid => {actualKey} != {computeKey}");
+					var ex = new InvalidTokenSignatureException($"JWT signature is invalid => {actualKey} != {computeKey}");
 					tracker?.Invoke(ex.Message, ex);
 					throw ex;
 				}

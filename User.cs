@@ -707,17 +707,17 @@ namespace net.vieapps.Components.Security
 				// issued at (expired after XXX seconds)
 				var issuedAt = token.Get<long>("iat");
 				if (DateTime.Now.ToUnixTimestamp() - issuedAt > (expiredAfter > 0 ? expiredAfter : 300))
-					throw new TokenExpiredException();
+					throw new TokenExpiredException("Authenticate token is expired");
 
 				// not valid after
 				var expiresAt = token.Get<long?>("exp");
 				if (expiresAt != null && DateTime.Now > expiresAt.Value.FromUnixTimestamp())
-					throw new TokenExpiredException();
+					throw new TokenExpiredException("Authenticate token is expired");
 
 				// not valid before
 				var notBefore = token.Get<long?>("nbf");
 				if (notBefore != null && DateTime.Now < notBefore.Value.FromUnixTimestamp())
-					throw new TokenExpiredException();
+					throw new TokenExpiredException("Authenticate token is expired");
 
 				// identities
 				var tokenID = token.Get<string>("jti");
@@ -726,16 +726,16 @@ namespace net.vieapps.Components.Security
 				var sessionID = token.Get<string>("sid");
 
 				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(sessionID) || string.IsNullOrWhiteSpace(audienceID) || userID == null)
-					throw new InvalidTokenException("Invalid identity");
+					throw new InvalidTokenException("Authenticate token identity is invalid");
 
 				sessionID = sessionID.HexToBytes().Decrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex();
 				if (!tokenID.Equals($"{userID}@{sessionID}".GetHMACBLAKE256(encryptionKey)))
-					throw new InvalidTokenException("Invalid identity");
+					throw new InvalidTokenException("Authenticate token identity is invalid");
 
 				if (userID.Equals("") && !audienceID.Equals(UtilityService.BlankUUID.GetHMACBLAKE128(signKey)))
-					throw new InvalidTokenException("Invalid identity");
+					throw new InvalidTokenException("Authenticate token identity is invalid");
 				else if (!userID.Equals("") && !audienceID.Equals(userID.GetHMACBLAKE128(signKey)))
-					throw new InvalidTokenException("Invalid identity");
+					throw new InvalidTokenException("Authenticate token identity is invalid");
 
 				// create user identity
 				var user = new User(userID, sessionID, null, null);
@@ -748,9 +748,9 @@ namespace net.vieapps.Components.Security
 			}
 			catch (Exception ex)
 			{
-				if (ex is TokenExpiredException || ex is InvalidTokenSignatureException || ex is InvalidTokenException)
+				if (ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException)
 					throw;
-				throw new InvalidTokenException("Invalid authenticate token", ex);
+				throw new InvalidTokenException("Authenticate token is invalid", ex);
 			}
 		}
 		#endregion
@@ -830,30 +830,29 @@ namespace net.vieapps.Components.Security
 				var expiresAt = token.Get<long>("exp").FromUnixTimestamp();
 				var notBefore = token.Get<long>("nbf").FromUnixTimestamp();
 				if (DateTime.Now > expiresAt || DateTime.Now < notBefore || issuedAt > expiresAt || issuedAt < notBefore)
-					throw new TokenExpiredException();
+					throw new TokenExpiredException("Access token is expired");
 
 				// identities
 				var tokenID = token.Get<string>("jti");
 				var userID = token.Get<string>("uid");
 				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(userID))
-					throw new InvalidTokenException("Invalid identity");
-				else
-					tokenID = key.Decrypt(tokenID.HexToBytes()).ToHex();
+					throw new InvalidTokenException("Access token identity is invalid");
+				tokenID = key.Decrypt(tokenID.HexToBytes()).ToHex();
 
 				// signature
 				var hash = token.Get<string>("ath").HexToBytes();
 				var signature = ECCsecp256k1.GetSignature(token.Get<string>("sig"));
 				if (!publicKey.Verify(hash, signature))
-					throw new InvalidTokenSignatureException();
+					throw new InvalidTokenSignatureException("Access token signature is invalid");
 
 				accessToken = key.Decrypt(token.Get<string>("atk"), true);
 				if (!hash.SequenceEqual(accessToken.GetHash(hashAlgorithm)))
-					throw new InvalidTokenException("Not matched");
+					throw new InvalidTokenException("Access token is not matched");
 
 				// info of access token
 				token = accessToken.ToExpandoObject();
 				if (!userID.IsEquals(token.Get<string>("uid")) || !tokenID.IsEquals(token.Get<string>("jti")))
-					throw new InvalidTokenException("Invalid identity");
+					throw new InvalidTokenException("Access token identity is invalid");
 
 				var roles = token.Get<List<string>>("rls");
 				var privileges = token.Get<List<Privilege>>("pls");
@@ -867,21 +866,11 @@ namespace net.vieapps.Components.Security
 				// return user identity
 				return user;
 			}
-			catch (TokenExpiredException)
-			{
-				throw;
-			}
-			catch (InvalidTokenSignatureException)
-			{
-				throw;
-			}
-			catch (InvalidTokenException)
-			{
-				throw;
-			}
 			catch (Exception ex)
 			{
-				throw new InvalidTokenException("Invalid access token", ex);
+				if (ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException)
+					throw;
+				throw new InvalidTokenException("Access token is invalid", ex);
 			}
 		}
 		#endregion
