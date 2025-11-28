@@ -748,9 +748,7 @@ namespace net.vieapps.Components.Security
 			}
 			catch (Exception ex)
 			{
-				if (ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException)
-					throw;
-				throw new InvalidTokenException("Authenticate token is invalid", ex);
+				throw ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException ? ex : new InvalidTokenException("Authenticate token is invalid", ex);
 			}
 		}
 		#endregion
@@ -868,9 +866,7 @@ namespace net.vieapps.Components.Security
 			}
 			catch (Exception ex)
 			{
-				if (ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException)
-					throw;
-				throw new InvalidTokenException("Access token is invalid", ex);
+				throw ex is TokenExpiredException || ex is InvalidTokenException || ex is InvalidTokenSignatureException ? ex : new InvalidTokenException("Access token is invalid", ex);
 			}
 		}
 		#endregion
