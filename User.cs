@@ -31,6 +31,11 @@ namespace net.vieapps.Components.Security
 		string SessionID { get; set; }
 
 		/// <summary>
+		/// Gets or sets identity of device in the working session
+		/// </summary>
+		string DeviceID { get; set; }
+
+		/// <summary>
 		/// Gets or sets the working roles (means working roles of services and system)
 		/// </summary>
 		List<string> Roles { get; set; }
@@ -83,26 +88,28 @@ namespace net.vieapps.Components.Security
 		/// <summary>
 		/// Initializes a new instance of the User class
 		/// </summary>
-		public User()	: this(null, null, null, null) { }
+		public User()	: this(null, null, null, null, null) { }
 
 		/// <summary>
 		/// Initializes a new instance of the UserIdentity class with identity, name and the specified authentication type
 		/// </summary>
 		/// <param name="user">The identity of user</param>
-		public User(IUser user)	: this(user?.ID, user?.SessionID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
+		public User(IUser user)	: this(user?.ID, user?.SessionID, user?.DeviceID, user?.Roles, user?.Privileges, user?.AuthenticationType) { }
 
 		/// <summary>
 		/// Initializes a new instance of the User class
 		/// </summary>
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
+		/// <param name="deviceID">The identity of device in the working session</param>
 		/// <param name="roles">The working roles</param>
 		/// <param name="privileges">The working privileges</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public User(string userID, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null)
+		public User(string userID, string sessionID, string deviceID, List<string> roles, List<Privilege> privileges, string authenticationType = null)
 		{
 			this.ID = userID;
 			this.SessionID = sessionID;
+			this.DeviceID = deviceID;
 			this.Roles = roles ?? new List<string>();
 			this.Privileges = privileges ?? new List<Privilege>();
 			this.AuthenticationType = authenticationType ?? "APIs";
@@ -126,15 +133,18 @@ namespace net.vieapps.Components.Security
 		/// Gets the default instance of an anonymous user
 		/// </summary>
 		/// <param name="sessionID"></param>
+		/// <param name="deviceID"></param>
 		/// <returns></returns>
-		public static User GetDefault(string sessionID = null)
-			=> new User("", sessionID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
+		public static User GetDefault(string sessionID = null, string deviceID = null)
+			=> new User("", sessionID ?? "", deviceID ?? "", new List<string> { SystemRole.All.ToString() }, new List<Privilege>(), "APIs");
 		#endregion
 
 		#region Properties
 		public string ID { get; set; }
 
 		public string SessionID { get; set; }
+
+		public string DeviceID { get; set; }
 
 		public List<string> Roles { get; set; } = new List<string>();
 
@@ -656,11 +666,12 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="userID">The string that presents identity of an user</param>
 		/// <param name="sessionID">The string that presents identity of working session that associated with user</param>
+		/// <param name="deviceID">The string that presents identity of device in the working session</param>
 		/// <param name="encryptionKey">The passphrase that used to encrypt data using AES</param>
 		/// <param name="signKey">The passphrase that used to sign the token</param>
 		/// <param name="onCompleted">The action to run when the processing is completed</param>
 		/// <returns>A JSON Web Token that presents the authenticate token</returns>
-		public static string GetAuthenticateToken(string userID, string sessionID, string encryptionKey, string signKey, Action<JObject> onCompleted = null)
+		public static string GetAuthenticateToken(string userID, string sessionID, string deviceID, string encryptionKey, string signKey, Action<JObject> onCompleted = null)
 		{
 			var payload = new JObject
 			{
@@ -669,6 +680,7 @@ namespace net.vieapps.Components.Security
 				{ "nbf", DateTime.Now.AddDays(-30).ToUnixTimestamp() },
 				{ "jti", $"{userID}@{sessionID}".GetHMACBLAKE256(encryptionKey) },
 				{ "sid", sessionID.HexToBytes().Encrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).ToHex() },
+				{ "did", deviceID.Encrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128), true) },
 				{ "aud", (string.IsNullOrWhiteSpace(userID) ? UtilityService.BlankUUID : userID).GetHMACBLAKE128(signKey) },
 				{ "uid", userID }
 			};
@@ -685,7 +697,7 @@ namespace net.vieapps.Components.Security
 		/// <param name="onCompleted">The action to run when the processing is completed</param>
 		/// <returns>A JSON Web Token that presents the authenticate token</returns>
 		public static string GetAuthenticateToken(this User user, string encryptionKey, string signKey, Action<JObject> onCompleted = null)
-			=> UserExtentions.GetAuthenticateToken(user.ID, user.SessionID, encryptionKey, signKey, onCompleted);
+			=> UserExtentions.GetAuthenticateToken(user.ID, user.SessionID, user.DeviceID, encryptionKey, signKey, onCompleted);
 
 		/// <summary>
 		/// Parses the given authenticate token and return an <see cref="User">UserIdentity</see> object
@@ -724,6 +736,7 @@ namespace net.vieapps.Components.Security
 				var userID = token.Get<string>("uid");
 				var audienceID = token.Get<string>("aud");
 				var sessionID = token.Get<string>("sid");
+				var deviceID = token.Get<string>("did");
 
 				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(sessionID) || string.IsNullOrWhiteSpace(audienceID) || userID == null)
 					throw new InvalidTokenException("Authenticate token identity is invalid");
@@ -737,8 +750,10 @@ namespace net.vieapps.Components.Security
 				else if (!userID.Equals("") && !audienceID.Equals(userID.GetHMACBLAKE128(signKey)))
 					throw new InvalidTokenException("Authenticate token identity is invalid");
 
+				deviceID = string.IsNullOrWhiteSpace(deviceID) ? null : deviceID.HexToBytes().Decrypt(encryptionKey.GenerateHashKey(256), encryptionKey.GenerateHashKey(128)).GetString();
+
 				// create user identity
-				var user = new User(userID, sessionID, null, null);
+				var user = new User(userID, sessionID, deviceID, null, null);
 
 				// callback
 				onCompleted?.Invoke(payload, user);
@@ -759,13 +774,14 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="userID">The string that presents the identity of the user</param>
 		/// <param name="sessionID">The string that presents the identity of the associated session</param>
+		/// <param name="deviceID">The string that presents identity of device in the associated session</param>
 		/// <param name="roles">The collection that presents the roles that the user was belong to</param>
 		/// <param name="privileges">The collection that presents the access privileges that the user was got</param>
 		/// <param name="key">The key used to encrypt and sign</param>
 		/// <param name="onCompleted">The action to run to modify playload (if needed) when the processing is completed</param>
 		/// <param name="hashAlgorithm">The hash algorithm used to hash and sign (md5, sha1, sha256, sha384, sha512, ripemd/ripemd160, blake128, blake/blake256, blake384, blake512)</param>
 		/// <returns>A JSON Web Token that presents the access token</returns>
-		public static string GetAccessToken(string userID, string sessionID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onCompleted = null, string hashAlgorithm = "BLAKE256")
+		public static string GetAccessToken(string userID, string sessionID, string deviceID, IEnumerable<string> roles, IEnumerable<Privilege> privileges, BigInteger key, Action<JObject> onCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			var token = new JObject
 			{
@@ -784,6 +800,7 @@ namespace net.vieapps.Components.Security
 				{ "nbf", DateTime.Now.AddDays(-30).ToUnixTimestamp() },
 				{ "jti", publicKey.Encrypt(sessionID.HexToBytes()).ToHex() },
 				{ "uid", userID },
+				{ "did", deviceID },
 				{ "atk", publicKey.Encrypt(token, true) },
 				{ "ath", hash.ToHex() },
 				{ "sig", ECCsecp256k1.GetSignature(signature) }
@@ -803,7 +820,7 @@ namespace net.vieapps.Components.Security
 		public static string GetAccessToken(this User user, BigInteger key, Action<JObject> onCompleted = null, string hashAlgorithm = "BLAKE256")
 		{
 			var roles = $"{SystemRole.All}{(user.ID.IsValidUUID() ? $",{SystemRole.Authenticated}" : "")}{(user.IsSystemAdministrator ? $",{SystemRole.SystemAdministrator}" : "")}";
-			return UserExtentions.GetAccessToken(user.ID, user.SessionID, roles.ToList().Concat(user.Roles ?? new List<string>()), user.Privileges, key, onCompleted, hashAlgorithm);
+			return UserExtentions.GetAccessToken(user.ID, user.SessionID, user.DeviceID, roles.ToList().Concat(user.Roles ?? new List<string>()), user.Privileges, key, onCompleted, hashAlgorithm);
 		}
 
 		/// <summary>
@@ -833,6 +850,7 @@ namespace net.vieapps.Components.Security
 				// identities
 				var tokenID = token.Get<string>("jti");
 				var userID = token.Get<string>("uid");
+				var deviceID = token.Get<string>("did");
 				if (string.IsNullOrWhiteSpace(tokenID) || string.IsNullOrWhiteSpace(userID))
 					throw new InvalidTokenException("Access token identity is invalid");
 				tokenID = key.Decrypt(tokenID.HexToBytes()).ToHex();
@@ -856,7 +874,7 @@ namespace net.vieapps.Components.Security
 				var privileges = token.Get<List<Privilege>>("pls");
 
 				// create new user identity
-				var user = new User(userID, tokenID, roles, privileges);
+				var user = new User(userID, tokenID, deviceID, roles, privileges);
 
 				// callback
 				onCompleted?.Invoke(payload, user);

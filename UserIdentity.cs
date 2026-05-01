@@ -24,8 +24,9 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
+		/// <param name="deviceID">The identity of device in the working session</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string sessionID, string authenticationType = null) : this(userID, sessionID, null, null, authenticationType)
+		public UserIdentity(string userID, string sessionID, string deviceID, string authenticationType = null) : this(userID, sessionID, deviceID, null, null, authenticationType)
 			=> this.SetUser();
 
 		/// <summary>
@@ -33,13 +34,15 @@ namespace net.vieapps.Components.Security
 		/// </summary>
 		/// <param name="userID">The identity of user</param>
 		/// <param name="sessionID">The identity of working session</param>
+		/// <param name="deviceID">The identity of device in the working session</param>
 		/// <param name="roles">The working roles</param>
 		/// <param name="privileges">The working privileges</param>
 		/// <param name="authenticationType">The type of authentication used</param>
-		public UserIdentity(string userID, string sessionID, List<string> roles, List<Privilege> privileges, string authenticationType = null)
+		public UserIdentity(string userID, string sessionID, string deviceID, List<string> roles, List<Privilege> privileges, string authenticationType = null)
 		{
 			this.ID = userID;
 			this.SessionID = sessionID;
+			this.DeviceID = deviceID;
 			this.AuthenticationType = authenticationType ?? "APIs";
 			this.Roles = (roles ?? new List<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 			this.Privileges = privileges ?? new List<Privilege>();
@@ -79,6 +82,7 @@ namespace net.vieapps.Components.Security
 				try
 				{
 					var info = userData.ToExpandoObject();
+					this.DeviceID = info.Get<string>("DeviceID");
 					this.Roles = info.Get<List<string>>("Roles")?.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 					this.Privileges = info.Get<List<Privilege>>("Privileges");
 				}
@@ -96,6 +100,7 @@ namespace net.vieapps.Components.Security
 		{
 			this.ID = user?.ID;
 			this.SessionID = user?.SessionID;
+			this.DeviceID = user?.DeviceID;
 			this.AuthenticationType = user?.AuthenticationType ?? "APIs";
 			this.Roles = (user?.Roles ?? new List<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 			this.Privileges = user?.Privileges ?? new List<Privilege>();
@@ -114,6 +119,11 @@ namespace net.vieapps.Components.Security
 		/// Gets or sets identity of working session
 		/// </summary>
 		public string SessionID { get; set; }
+
+		/// <summary>
+		/// Gets or sets identity of device in the working session
+		/// </summary>
+		public string DeviceID { get; set; }
 
 		/// <summary>
 		/// Gets or sets the working roles (means working roles of business services and special system roles)
@@ -186,9 +196,10 @@ namespace net.vieapps.Components.Security
 				this.RemoveClaim(claim);
 			this.AddClaim(new Claim(ClaimTypes.UserData, new Newtonsoft.Json.Linq.JObject
 			{
-				{ "Roles", this.Roles.ToJArray() },
-				{ "Privileges", this.Privileges.ToJArray() }
-			}.ToString(Newtonsoft.Json.Formatting.None)));
+				["DeviceID"] = this.DeviceID,
+				["Roles"] = this.Roles.ToJArray(),
+				["Privileges"] = this.Privileges.ToJArray()
+			}.AsString()));
 		}
 
 		/// <summary>
@@ -223,6 +234,6 @@ namespace net.vieapps.Components.Security
 		public User User { get; private set; }
 
 		void SetUser()
-			=> this.User = new User(this.ID, this.SessionID, this.Roles, this.Privileges, this.AuthenticationType);
+			=> this.User = new User(this.ID, this.SessionID, this.DeviceID, this.Roles, this.Privileges, this.AuthenticationType);
 	}
 }
